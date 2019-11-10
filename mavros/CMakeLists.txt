@@ -167,6 +167,15 @@ target_link_libraries(gcs_bridge
   ${catkin_LIBRARIES}
 )
 
+
+add_executable(fixed_wing_formation_control
+  src/fixed_wing_formation_control.cpp
+)
+target_link_libraries(fixed_wing_formation_control
+  mavros
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

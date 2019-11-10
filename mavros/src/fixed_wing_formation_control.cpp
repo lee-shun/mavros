@@ -2,7 +2,7 @@
 /* 作者：CGNC_LAB,BIT
  * 时间：2019.11.09
  */
-#include </home/lee/fixed_wing_formation_control/MAVROS_part/fixed_wing_formation_control.hpp>//记得修改一下路径
+ #include "fixed_wing_formation_control.hpp"//记得修改一下路径
 
 
 void 
@@ -31,22 +31,22 @@ _FIXED_WING_FORMATION_CONTROL::get_ros_time(ros::Time begin)
 
 void 
 _FIXED_WING_FORMATION_CONTROL::handle_status_from_receiver(){
-    return true;
+    //
 }
 
 void 
 _FIXED_WING_FORMATION_CONTROL::handle_message_from_px4(){
-    return true;
+    //
 }
 
 void 
 _FIXED_WING_FORMATION_CONTROL::send_the_command_to_px4(){
-    return true;
+    //
 }
 
 void 
 _FIXED_WING_FORMATION_CONTROL::send_message_to_sender(){
-    return true;
+    //
 }
 
 void 
@@ -55,19 +55,19 @@ _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(){
    
    
    
-    return true;
+    //
 }
 
 
 void 
 _FIXED_WING_FORMATION_CONTROL::run(){
-    return true;
+    //
 }
 
 
 
 void 
-_FIXED_WING_FORMATION_CONTROL::test(){
+_FIXED_WING_FORMATION_CONTROL::test(int argc,char **argv){
 
     ros::init(argc, argv, "fixed_wing_formation_control");
     ros::NodeHandle nh;
@@ -154,7 +154,7 @@ _FIXED_WING_FORMATION_CONTROL::test(){
         rate.sleep();
     }    
           
-       return true;
+       //
     
     
     
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
     if (true)
     {
 
-        formation_control.test();
+        formation_control.test(int argc,char **argv);
 
     }
 

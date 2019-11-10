@@ -58,13 +58,13 @@ class _FIXED_WING_FORMATION_CONTROL {
 
 
 	public:
-		FIXED_WING_FORMATION_CONTROL();
+		_FIXED_WING_FORMATION_CONTROL();
 			
-		~FIXED_WING_FORMATION_CONTROL();
+		~_FIXED_WING_FORMATION_CONTROL();
 
 		void run();
 
-		void test();
+		void test(int argc,char **argv);
 
 		void ros_sub_and_pub();
 
@@ -122,5 +122,5 @@ class _FIXED_WING_FORMATION_CONTROL {
 
 
 
-}
+};
 
