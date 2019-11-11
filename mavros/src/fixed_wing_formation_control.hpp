@@ -43,6 +43,8 @@ public:
 
 	void run();
 
+	bool show_fixed_wing_status();
+
 	void test(int argc, char **argv);
 
 	void ros_sub_and_pub();

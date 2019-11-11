@@ -13,10 +13,7 @@ class _FIXED_WING_SUB_PUB
 {
 
 private:
-    
-
 public:
-
     mavros_msgs::State current_state; //无人机当前状态[包含上锁状态 模式] (从飞控中读取)
 
     mavros_msgs::PositionTarget pos_setpoint; //即将发给无人机的控制指令
@@ -28,11 +25,11 @@ public:
     sensor_msgs::Imu imu;
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
-    float PIX_Euler[3];        //无人机当前欧拉角(从飞控中读取)
+    float att_angle_Euler[3];        //无人机当前欧拉角(从飞控中读取)
     float Thrust_target;       //期望推力
-    _FIXED_WING_MATHLIB mathlib;
 
-    
+    _FIXED_WING_MATHLIB mathlib; //数学类
+
     //*******************ros_call_back*************************//
     void state_cb(const mavros_msgs::State::ConstPtr &msg)
     {
@@ -68,7 +65,7 @@ public:
         q[2] = msg->orientation.y;
         q[3] = msg->orientation.z;
 
-        mathlib.quaternion_2_euler(q, PIX_Euler);
+        mathlib.quaternion_2_euler(q, att_angle_Euler);
     }
 
     //*******************ros_call_back*************************//
