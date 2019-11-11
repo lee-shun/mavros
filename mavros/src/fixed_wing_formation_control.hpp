@@ -13,37 +13,59 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
-	struct
+	
+	struct _s_fixed_wing_status
 	{
+		string mode;
 
-		float leader_ground_speed_ned_param1{0};
+		float ground_speed_ned_param1{0};
 
-		float leader_ground_speed_ned_param2{0};
+		float ground_speed_ned_param2{0};
 
-		float leader_air_speed;
+		float global_vel_x;
 
-		float leader_attitude;
+		float global_vel_y;
 
-		float leader_relative_hight;
+		float global_vel_z;
 
-		float leader_altitude;
+		float air_speed;
 
-		float leader_longtitude;
+		float relative_hight;
 
-		float leader_yaw_angle;
+		float latitude;
 
-		float leader_roll_angle;
+		float altitude;
 
-	} _s_leader_status;
+		float longtitude;
+
+		float ned_pos_x;
+
+		float ned_pos_y;
+
+		float ned_pos_z;
+
+		float ned_vel_x;
+
+		float ned_vel_y;
+
+		float ned_vel_z;
+
+		float pitch_angle;
+
+		float yaw_angle;
+
+		float roll_angle;
+
+	} leader_status, follower_status ;
 
 public:
-	// _FIXED_WING_FORMATION_CONTROL();
-
-	// ~_FIXED_WING_FORMATION_CONTROL();
+	float get_ros_time(ros::Time begin); //获取ros当前时间
 
 	void run();
 
-	bool show_fixed_wing_status();
+	bool update_fixed_wing_status();
+
+	void show_fixed_wing_status(const _s_fixed_wing_status *status, ros::Time begin_time);
 
 	void test(int argc, char **argv);
 
@@ -56,7 +78,4 @@ public:
 	void send_the_command_to_px4();
 
 	void send_message_to_sender();
-
-	float get_ros_time(ros::Time begin); //获取ros当前时间
-
 };
