@@ -16,6 +16,7 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
+
 	struct _s_fixed_wing_status
 	{
 		string mode;
@@ -60,14 +61,66 @@ private:
 
 	} leader_status, follower_status;
 
+
+	struct _s_follower_setpiont
+	{
+		string mode;
+
+		float ground_speed_ned_param1{0};
+
+		float ground_speed_ned_param2{0};
+
+		float global_vel_x;
+
+		float global_vel_y;
+
+		float global_vel_z;
+
+		float air_speed;
+
+		float relative_hight;
+
+		float latitude;
+
+		float altitude;
+
+		float longtitude;
+
+		float ned_pos_x;
+
+		float ned_pos_y;
+
+		float ned_pos_z;
+
+		float ned_vel_x;
+
+		float ned_vel_y;
+
+		float ned_vel_z;
+
+		float pitch_angle;
+
+		float yaw_angle;
+
+		float roll_angle;
+
+	} follower_setpoint;
+
+
+
 public:
+
+	void write_to_files();
+
 	float get_ros_time(ros::Time begin); //获取ros当前时间
 
-	void run();
+	void run(int argc, char **argv);
 
-	bool update_fixed_wing_status();
+	bool update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
-	void show_fixed_wing_status(const _s_fixed_wing_status *status, ros::Time begin_time);
+	bool update_leader_status();
+
+	void show_fixed_wing_status(const float current_time, int PlaneID);
 
 	void test(int argc, char **argv);
 
@@ -80,6 +133,12 @@ public:
 	void send_the_command_to_px4();
 
 	void send_message_to_sender();
+
+	void control_formation();
+
+    void send_setpoint_to_px4();
+
+    void send_setpoint_to_ground_station();
 };
 
 #endif
