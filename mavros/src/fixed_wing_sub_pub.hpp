@@ -1,3 +1,6 @@
+#ifndef _FIXED_WING_SUB_PUB_HPP_
+#define _FIXED_WING_SUB_PUB_HPP_
+
 // ros程序必备头文件
 #include <ros/ros.h>
 //mavros相关头文件
@@ -6,13 +9,13 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h> //GPS Fix.
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>//UTM coords
+#include <geometry_msgs/PoseWithCovarianceStamped.h> //UTM coords
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h> //Velocity fused by FCU
 
 #include "fixed_wing_mathlib.hpp"
 
-#define the_space_between_lines 1 //为了打印中间空格
+#define the_space_between_lines 1  //为了打印中间空格
 #define the_space_between_blocks 3 //为了打印中间空格
 
 class _FIXED_WING_SUB_PUB
@@ -20,35 +23,24 @@ class _FIXED_WING_SUB_PUB
 
 private:
 public:
-    
     _FIXED_WING_MATHLIB mathlib; //数学类
 
+    mavros_msgs::State current_state; //无人机当前状态[包含上锁状态 模式] (从飞控中读取)
+    sensor_msgs::Imu imu;
+    sensor_msgs::NavSatFix global_position_form_px4;
+    geometry_msgs::PoseWithCovarianceStamped umt_position_from_px4;
+    geometry_msgs::TwistStamped velocity_global_fused_from_px4;
+    geometry_msgs::TwistStamped velocity_ned_fused_from_px4;
+    geometry_msgs::PoseStamped local_position_from_px4;
 
-
-    mavros_msgs::State                                      current_state; //无人机当前状态[包含上锁状态 模式] (从飞控中读取)
-    sensor_msgs::Imu                                        imu;
-    sensor_msgs::NavSatFix                                  global_position_form_px4;
-    geometry_msgs::PoseWithCovarianceStamped                umt_position_from_px4;
-    geometry_msgs::TwistStamped                             velocity_global_fused_from_px4;
-    geometry_msgs::TwistStamped                             velocity_ned_fused_from_px4;
-    geometry_msgs::PoseStamped                              local_position_from_px4;
-
-
-
-    float PIX_Euler_target[3];         //无人机 期望欧拉角(从飞控中读取)
-    float att_angle_Euler[3];        //无人机当前欧拉角(从飞控中读取)
-    
-    
-
-    
-
+    float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
+    float att_angle_Euler[3];  //无人机当前欧拉角(从飞控中读取)
 
     void state_cb(const mavros_msgs::State::ConstPtr &msg)
     {
         current_state = *msg;
     }
 
-    
     void imu_cb(const sensor_msgs::Imu::ConstPtr &msg)
     {
         imu = *msg;
@@ -76,7 +68,6 @@ public:
         velocity_global_fused_from_px4 = *msg;
     }
 
-
     void velocity_ned_fused_from_px4_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
     {
         velocity_ned_fused_from_px4 = *msg;
@@ -86,6 +77,6 @@ public:
     {
         local_position_from_px4 = *msg;
     }
-
-
 };
+
+#endif

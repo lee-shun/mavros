@@ -4,6 +4,9 @@
  */
 
 // ros程序必备头文件
+#ifndef _FIXED_WING_FORMATION_CONTROL_HPP_
+#define _FIXED_WING_FORMATION_CONTROL_HPP_
+
 #include <ros/ros.h>
 #include "fixed_wing_sub_pub.hpp"
 
@@ -13,7 +16,6 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
-	
 	struct _s_fixed_wing_status
 	{
 		string mode;
@@ -56,7 +58,7 @@ private:
 
 		float roll_angle;
 
-	} leader_status, follower_status ;
+	} leader_status, follower_status;
 
 public:
 	float get_ros_time(ros::Time begin); //获取ros当前时间
@@ -79,3 +81,5 @@ public:
 
 	void send_message_to_sender();
 };
+
+#endif
