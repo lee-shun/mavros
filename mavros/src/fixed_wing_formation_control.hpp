@@ -123,6 +123,8 @@ public:
 
 	bool update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
+	bool set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode);
+
 	bool update_leader_status();
 
 	void show_fixed_wing_status(int PlaneID);

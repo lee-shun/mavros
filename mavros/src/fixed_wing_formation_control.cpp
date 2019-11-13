@@ -71,6 +71,12 @@ void _FIXED_WING_FORMATION_CONTROL::test(int argc, char **argv)
 {
 }
 
+bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
+{
+
+}
+
+
 void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
 {
 
@@ -152,7 +158,7 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.ned_vel_z = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
 
     follower_status.air_speed = 0;
-    write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
+    //write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
@@ -163,25 +169,63 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
     ros::Time begin_time = ros::Time::now(); // 记录启控时间
 
     _FIXED_WING_SUB_PUB fixed_wing_sub_pub; //定义订阅发布对象，所有的发布声明，以及回调函数声明（直接定义），回调函数结果在这里面。
-
+  //##########################################订阅消息###################################################//
     ros::Subscriber // 【订阅】无人机当前模式
-        fixed_wing_states_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, &_FIXED_WING_SUB_PUB::state_cb, &fixed_wing_sub_pub);
+        fixed_wing_states_sub = nh.subscribe<mavros_msgs::State>//
+        ("mavros/state", 10, &_FIXED_WING_SUB_PUB::state_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机imu信息，
-        fixed_wing_imu_sub = nh.subscribe<sensor_msgs::Imu>("mavros/imu/data", 10, &_FIXED_WING_SUB_PUB::imu_cb, &fixed_wing_sub_pub);
+        fixed_wing_imu_sub = nh.subscribe<sensor_msgs::Imu>//
+        ("mavros/imu/data", 10, &_FIXED_WING_SUB_PUB::imu_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机gps位置
-        fixed_wing_global_position_form_px4_sub = nh.subscribe<sensor_msgs::NavSatFix>("mavros/global_position/global", 10, &_FIXED_WING_SUB_PUB::global_position_form_px4_cb, &fixed_wing_sub_pub);
+        fixed_wing_global_position_form_px4_sub = nh.subscribe<sensor_msgs::NavSatFix>//
+        ("mavros/global_position/global", 10, &_FIXED_WING_SUB_PUB::global_position_form_px4_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机ump位置
-        fixed_wing_umt_position_from_px4_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("mavros/global_position/local", 10, &_FIXED_WING_SUB_PUB::umt_position_from_px4_cb, &fixed_wing_sub_pub);
+        fixed_wing_umt_position_from_px4_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>//
+        ("mavros/global_position/local", 10, &_FIXED_WING_SUB_PUB::umt_position_from_px4_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机gps三向速度
-        fixed_wing_velocity_global_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>("mavros/global_position/gp_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
+        fixed_wing_velocity_global_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>//
+        ("mavros/global_position/gp_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机ned位置
-        fixed_wing_local_position_from_px4 = nh.subscribe<geometry_msgs::PoseStamped>("mavros/local_position/pose", 10, &_FIXED_WING_SUB_PUB::local_position_from_px4_cb, &fixed_wing_sub_pub);
+        fixed_wing_local_position_from_px4 = nh.subscribe<geometry_msgs::PoseStamped>//
+        ("mavros/local_position/pose", 10, &_FIXED_WING_SUB_PUB::local_position_from_px4_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机ned三向速度
-        fixed_wing_velocity_ned_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>("mavros/local_position/velocity", 10, &_FIXED_WING_SUB_PUB::velocity_ned_fused_from_px4_cb, &fixed_wing_sub_pub);
+        fixed_wing_velocity_ned_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>//
+        ("mavros/local_position/velocity", 10, &_FIXED_WING_SUB_PUB::velocity_ned_fused_from_px4_cb, &fixed_wing_sub_pub);
+  //##########################################订阅消息###################################################//
+
+
+  //##########################################发布消息###################################################//
+    
+    //修改模式
+    ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+
+    
+  //##########################################发布消息###################################################//
+
+  //##########################################服务###################################################//
+
+
+
+
+  //##########################################服务###################################################//
+
+
+
+
+
 
     while (ros::ok())
     {
         current_time = get_ros_time(begin_time);
+
+
+        if (follower_status.mode != follower_setpoint.mode)
+        {
+            fixed_wing_sub_pub.mode_cmd.request.custom_mode = follower_setpoint.mode;
+            set_mode_client.call(fixed_wing_sub_pub.mode_cmd);
+
+        }
+        
 
         update_follwer_status(&fixed_wing_sub_pub);
         update_leader_status();
