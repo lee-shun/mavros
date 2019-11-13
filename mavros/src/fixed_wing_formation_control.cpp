@@ -150,9 +150,9 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.yaw_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[2];   //东向为零，向北转动为正，
 
     //以下为ned坐标系
-    follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.x;
-    follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.y;
-    follower_status.ned_pos_z = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.z;
+    follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.pose.position.x;
+    follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.pose.position.y;
+    follower_status.ned_pos_z = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.pose.position.z;
     follower_status.ned_vel_x = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.x;
     follower_status.ned_vel_y = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.y;
     follower_status.ned_vel_z = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
@@ -167,6 +167,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
     ros::NodeHandle nh;
     ros::Rate rate(10.0);
     ros::Time begin_time = ros::Time::now(); // 记录启控时间
+
 
     _FIXED_WING_SUB_PUB fixed_wing_sub_pub; //定义订阅发布对象，所有的发布声明，以及回调函数声明（直接定义），回调函数结果在这里面。
   //##########################################订阅消息###################################################//
@@ -186,7 +187,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         fixed_wing_velocity_global_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>//
         ("mavros/global_position/gp_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机ned位置
-        fixed_wing_local_position_from_px4 = nh.subscribe<geometry_msgs::PoseStamped>//
+        fixed_wing_local_position_from_px4 = nh.subscribe<nav_msgs::Odometry >//
         ("mavros/local_position/pose", 10, &_FIXED_WING_SUB_PUB::local_position_from_px4_cb, &fixed_wing_sub_pub);
     ros::Subscriber // 【订阅】无人机ned三向速度
         fixed_wing_velocity_ned_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>//
@@ -196,8 +197,10 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
   //##########################################发布消息###################################################//
     
-    //修改模式
+        // 服务 修改系统模式
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+
+    mavros_msgs::SetMode mode_cmd;
 
     
   //##########################################发布消息###################################################//
@@ -210,25 +213,24 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
   //##########################################服务###################################################//
 
 
-
-
-
-
     while (ros::ok())
     {
         current_time = get_ros_time(begin_time);
 
-
-        if (follower_status.mode != follower_setpoint.mode)
-        {
-            fixed_wing_sub_pub.mode_cmd.request.custom_mode = follower_setpoint.mode;
-            set_mode_client.call(fixed_wing_sub_pub.mode_cmd);
-
-        }
-        
-
         update_follwer_status(&fixed_wing_sub_pub);
         update_leader_status();
+
+        follower_setpoint.mode = "OFFBOARD";//指定飞机的模式
+
+        if (follower_status.mode != "OFFBOARD")
+        {
+            // mode_cmd.request.custom_mode = "OFFBOARD";
+            // set_mode_client.call(mode_cmd);
+             mode_cmd.request.custom_mode = "OFFBOARD";
+           set_mode_client.call(mode_cmd);
+
+        }
+
 
         show_fixed_wing_status(2);
         show_fixed_wing_status(1);

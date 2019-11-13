@@ -6,6 +6,7 @@
 //mavros相关头文件
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/SetMode.h>
+#include <nav_msgs/Odometry.h>//提示local——position在这里
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h> //GPS Fix.
@@ -32,9 +33,11 @@ public:
     geometry_msgs::PoseWithCovarianceStamped umt_position_from_px4;
     geometry_msgs::TwistStamped velocity_global_fused_from_px4;
     geometry_msgs::TwistStamped velocity_ned_fused_from_px4;
-    geometry_msgs::PoseStamped local_position_from_px4;
-
-    mavros_msgs::SetMode mode_cmd;
+    //geometry_msgs::PoseStamped local_position_from_px4;
+    
+    nav_msgs::Odometry local_position_from_px4;
+    
+    
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
     float att_angle_Euler[3];  //无人机当前欧拉角(从飞控中读取)
@@ -76,7 +79,7 @@ public:
         velocity_ned_fused_from_px4 = *msg;
     }
 
-    void local_position_from_px4_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+    void local_position_from_px4_cb(const nav_msgs::Odometry ::ConstPtr &msg)
     {
         local_position_from_px4 = *msg;
     }
