@@ -176,6 +176,16 @@ target_link_libraries(fixed_wing_formation_control
   ${catkin_LIBRARIES}
 )
 
+add_executable(mavros_example_3
+  src/mavros_example_3.cpp
+)
+target_link_libraries(mavros_example_3
+  mavros
+  ${catkin_LIBRARIES}
+)
+
+
+
 #############
 ## Install ##
 #############
