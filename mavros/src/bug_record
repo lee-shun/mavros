@@ -1,0 +1,3 @@
+[ERROR] [1573656963.969949313]: MODE: Unsupported FCU
+[ERROR] [1573656964.211694194]: Client [/fixed_wing_formation_control] wants topic /mavros/global_position/local to have datatype/md5sum [geometry_msgs/PoseWithCovarianceStamped/953b798c0f514ff060a53a3498ce6246], but our version has [nav_msgs/Odometry/cd5e73d190d741a2f92e81eda573aca7]. Dropping connection.
+[ERROR] [1573656964.212307753]: Client [/fixed_wing_formation_control] wants topic /mavros/local_position/pose to have datatype/md5sum [nav_msgs/Odometry/cd5e73d190d741a2f92e81eda573aca7], but our version has [geometry_msgs/PoseStamped/d3812c3cbc69362b77dc0b19b345f8f5]. Dropping connection.

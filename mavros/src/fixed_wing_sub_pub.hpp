@@ -36,7 +36,7 @@ public:
     //geometry_msgs::PoseStamped local_position_from_px4;
     
     nav_msgs::Odometry local_position_from_px4;
-    
+    mavros_msgs::SetMode mode_cmd;
     
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)

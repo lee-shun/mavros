@@ -11,7 +11,7 @@ void _FIXED_WING_FORMATION_CONTROL::write_to_files(string file_path_name, float 
     fstream oufile;
 
     oufile.open(file_path_name.c_str(), ios::app | ios::out);
-    oufile <<fixed << setprecision(4)<< time_stamp << "\t" << data << endl;
+    oufile << fixed << setprecision(4) << time_stamp << "\t" << data << endl;
 
     if (!oufile)
         cout << file_path_name << "-->"
@@ -73,9 +73,7 @@ void _FIXED_WING_FORMATION_CONTROL::test(int argc, char **argv)
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
 {
-
 }
-
 
 void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
 {
@@ -168,50 +166,48 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
     ros::Rate rate(10.0);
     ros::Time begin_time = ros::Time::now(); // 记录启控时间
 
-
     _FIXED_WING_SUB_PUB fixed_wing_sub_pub; //定义订阅发布对象，所有的发布声明，以及回调函数声明（直接定义），回调函数结果在这里面。
-  //##########################################订阅消息###################################################//
-    ros::Subscriber // 【订阅】无人机当前模式
-        fixed_wing_states_sub = nh.subscribe<mavros_msgs::State>//
-        ("mavros/state", 10, &_FIXED_WING_SUB_PUB::state_cb, &fixed_wing_sub_pub);
-    ros::Subscriber // 【订阅】无人机imu信息，
-        fixed_wing_imu_sub = nh.subscribe<sensor_msgs::Imu>//
-        ("mavros/imu/data", 10, &_FIXED_WING_SUB_PUB::imu_cb, &fixed_wing_sub_pub);
-    ros::Subscriber // 【订阅】无人机gps位置
-        fixed_wing_global_position_form_px4_sub = nh.subscribe<sensor_msgs::NavSatFix>//
-        ("mavros/global_position/global", 10, &_FIXED_WING_SUB_PUB::global_position_form_px4_cb, &fixed_wing_sub_pub);
-    ros::Subscriber // 【订阅】无人机ump位置
-        fixed_wing_umt_position_from_px4_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>//
-        ("mavros/global_position/local", 10, &_FIXED_WING_SUB_PUB::umt_position_from_px4_cb, &fixed_wing_sub_pub);
-    ros::Subscriber // 【订阅】无人机gps三向速度
-        fixed_wing_velocity_global_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>//
-        ("mavros/global_position/gp_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
-    ros::Subscriber // 【订阅】无人机ned位置
-        fixed_wing_local_position_from_px4 = nh.subscribe<nav_msgs::Odometry >//
-        ("mavros/local_position/pose", 10, &_FIXED_WING_SUB_PUB::local_position_from_px4_cb, &fixed_wing_sub_pub);
-    ros::Subscriber // 【订阅】无人机ned三向速度
-        fixed_wing_velocity_ned_fused_from_px4_sub = nh.subscribe<geometry_msgs::TwistStamped>//
-        ("mavros/local_position/velocity", 10, &_FIXED_WING_SUB_PUB::velocity_ned_fused_from_px4_cb, &fixed_wing_sub_pub);
-  //##########################################订阅消息###################################################//
+                                            //##########################################订阅消息###################################################//
+    ros::Subscriber                         // 【订阅】无人机当前模式
+        fixed_wing_states_sub               //
+        = nh.subscribe<mavros_msgs::State>  //
+          ("mavros/state", 10, &_FIXED_WING_SUB_PUB::state_cb, &fixed_wing_sub_pub);
+    ros::Subscriber                      // 【订阅】无人机imu信息，
+        fixed_wing_imu_sub               //
+        = nh.subscribe<sensor_msgs::Imu> //
+          ("mavros/imu/data", 10, &_FIXED_WING_SUB_PUB::imu_cb, &fixed_wing_sub_pub);
+    ros::Subscriber                             // 【订阅】无人机gps位置
+        fixed_wing_global_position_form_px4_sub //
+        = nh.subscribe<sensor_msgs::NavSatFix>  //
+          ("mavros/global_position/global", 10, &_FIXED_WING_SUB_PUB::global_position_form_px4_cb, &fixed_wing_sub_pub);
+    ros::Subscriber                                              // 【订阅】无人机ump位置
+        fixed_wing_umt_position_from_px4_sub                     //
+        = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped> //
+          ("mavros/global_position/local", 10, &_FIXED_WING_SUB_PUB::umt_position_from_px4_cb, &fixed_wing_sub_pub);
+    ros::Subscriber                                   // 【订阅】无人机gps三向速度
+        fixed_wing_velocity_global_fused_from_px4_sub //
+        = nh.subscribe<geometry_msgs::TwistStamped>   //
+          ("mavros/global_position/gp_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
+    ros::Subscriber                        // 【订阅】无人机ned位置
+        fixed_wing_local_position_from_px4 //
+        = nh.subscribe<nav_msgs::Odometry> //
+          ("mavros/local_position/pose", 10, &_FIXED_WING_SUB_PUB::local_position_from_px4_cb, &fixed_wing_sub_pub);
+    ros::Subscriber                                 // 【订阅】无人机ned三向速度
+        fixed_wing_velocity_ned_fused_from_px4_sub  //
+        = nh.subscribe<geometry_msgs::TwistStamped> //
+          ("mavros/local_position/velocity", 10, &_FIXED_WING_SUB_PUB::velocity_ned_fused_from_px4_cb, &fixed_wing_sub_pub);
+    //##########################################订阅消息###################################################//
 
+    //##########################################发布消息###################################################//
 
-  //##########################################发布消息###################################################//
-    
-        // 服务 修改系统模式
+    // 服务 修改系统模式
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
 
-    mavros_msgs::SetMode mode_cmd;
+    //##########################################发布消息###################################################//
 
-    
-  //##########################################发布消息###################################################//
+    //##########################################服务###################################################//
 
-  //##########################################服务###################################################//
-
-
-
-
-  //##########################################服务###################################################//
-
+    //##########################################服务###################################################//
 
     while (ros::ok())
     {
@@ -220,17 +216,14 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         update_follwer_status(&fixed_wing_sub_pub);
         update_leader_status();
 
-        follower_setpoint.mode = "OFFBOARD";//指定飞机的模式
+        follower_setpoint.mode = "OFFBOARD"; //指定飞机的模式
 
-        if (follower_status.mode != "OFFBOARD")
+        if (follower_status.mode != follower_setpoint.mode)
         {
-            // mode_cmd.request.custom_mode = "OFFBOARD";
-            // set_mode_client.call(mode_cmd);
-             mode_cmd.request.custom_mode = "OFFBOARD";
-           set_mode_client.call(mode_cmd);
 
+            fixed_wing_sub_pub.mode_cmd.request.custom_mode = follower_setpoint.mode;
+            set_mode_client.call(fixed_wing_sub_pub.mode_cmd);
         }
-
 
         show_fixed_wing_status(2);
         show_fixed_wing_status(1);
