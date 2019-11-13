@@ -4,9 +4,19 @@
  */
 #include "fixed_wing_formation_control.hpp" //记得修改一下路径
 
-void write_to_files()
+void _FIXED_WING_FORMATION_CONTROL::write_to_files(string file_path_name, float time_stamp, float data)
 {
     //打开一个文件，将它的值以及时间戳写进去，文件命名为值的名字
+
+    fstream oufile;
+
+    oufile.open(file_path_name.c_str(), ios::app | ios::out);
+    oufile <<fixed << setprecision(4)<< time_stamp << "\t" << data << endl;
+
+    if (!oufile)
+        cout << file_path_name << "-->"
+             << "something wrong to open or write" << endl;
+    oufile.close();
 }
 
 float _FIXED_WING_FORMATION_CONTROL::get_ros_time(ros::Time begin)
@@ -61,7 +71,7 @@ void _FIXED_WING_FORMATION_CONTROL::test(int argc, char **argv)
 {
 }
 
-void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(const float current_time, int PlaneID)
+void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
 {
 
     _s_fixed_wing_status *p;
@@ -142,6 +152,7 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.ned_vel_z = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
 
     follower_status.air_speed = 0;
+    write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
@@ -170,13 +181,13 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
     while (ros::ok())
     {
-        float current_time = get_ros_time(begin_time);
+        current_time = get_ros_time(begin_time);
 
         update_follwer_status(&fixed_wing_sub_pub);
         update_leader_status();
 
-        show_fixed_wing_status(current_time, 2);
-        show_fixed_wing_status(current_time, 1);
+        show_fixed_wing_status(2);
+        show_fixed_wing_status(1);
 
         control_formation();
 

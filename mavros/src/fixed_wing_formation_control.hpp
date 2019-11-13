@@ -8,6 +8,9 @@
 #define _FIXED_WING_FORMATION_CONTROL_HPP_
 
 #include <ros/ros.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 #include "fixed_wing_sub_pub.hpp"
 
 using namespace std;
@@ -16,6 +19,8 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
+
+	float current_time;
 
 	struct _s_fixed_wing_status
 	{
@@ -110,7 +115,7 @@ private:
 
 public:
 
-	void write_to_files();
+	void write_to_files(string file_path_name, float time_stamp, float data);
 
 	float get_ros_time(ros::Time begin); //获取ros当前时间
 
@@ -120,7 +125,7 @@ public:
 
 	bool update_leader_status();
 
-	void show_fixed_wing_status(const float current_time, int PlaneID);
+	void show_fixed_wing_status(int PlaneID);
 
 	void test(int argc, char **argv);
 
