@@ -7,6 +7,14 @@
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/SetMode.h>
 #include <nav_msgs/Odometry.h> //提示local——position在这里
+#include <mavros_msgs/WaypointList.h>
+#include <mavros_msgs/WaypointReached.h>
+#include <mavros_msgs/CommandBool.h>
+#include <mavros_msgs/WaypointSetCurrent.h>
+#include <mavros_msgs/WaypointPull.h>
+#include <mavros_msgs/WaypointPush.h>
+#include <mavros_msgs/WaypointClear.h>
+
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h> //GPS Fix.
@@ -59,7 +67,22 @@ public:
 
     sensor_msgs::BatteryState battrey_state_from_px4;
 
+    mavros_msgs::WaypointList waypoint_list;
+
+    mavros_msgs::WaypointReached waypoint_reached;
+    
+    //服务项暂存容器
     mavros_msgs::SetMode mode_cmd;
+
+    mavros_msgs::CommandBool arming_service;
+
+    mavros_msgs::WaypointSetCurrent waypoint_set_current_service;
+
+    mavros_msgs::WaypointPull waypoint_pull_service;
+
+    mavros_msgs::WaypointPush waypoint_push_service;
+
+    mavros_msgs::WaypointClear waypoint_clear_service;
 
     //发布的数据暂时容器
     mavros_msgs::PositionTarget local_pos_sp;
@@ -132,6 +155,18 @@ public:
     {
         battrey_state_from_px4 = *msg;
     }
+
+    void waypoints_reached_from_px4_cb(const mavros_msgs::WaypointReached::ConstPtr &msg)
+    {
+        waypoint_reached = *msg;
+    }
+
+    void waypointlist_from_px4_cb(const mavros_msgs::WaypointList::ConstPtr &msg)
+    {
+        waypoint_list = *msg;
+    }
+
+
 };
 
 #endif

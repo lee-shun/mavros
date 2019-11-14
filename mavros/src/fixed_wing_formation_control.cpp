@@ -103,6 +103,14 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<sensor_msgs::BatteryState> //
           ("/mavros/battery", 10, &_FIXED_WING_SUB_PUB::battrey_state_from_px4_cb, fixed_wing_sub_pub_poiter);
 
+    fixed_wing_waypoints_sub                      //// 【订阅】无人机当前航点
+        = nh.subscribe<mavros_msgs::WaypointList> //
+          ("mavros/mission/waypoints", 10, &_FIXED_WING_SUB_PUB::waypointlist_from_px4_cb, fixed_wing_sub_pub_poiter);
+
+    fixed_wing_waypointsreach_sub                    //// 【订阅】无人机到达的航点
+        = nh.subscribe<mavros_msgs::WaypointReached> //
+          ("mavros/mission/reached", 10, &_FIXED_WING_SUB_PUB::waypoints_reached_from_px4_cb, fixed_wing_sub_pub_poiter);
+
     //##########################################订阅消息###################################################//
 
     //##########################################发布消息###################################################//
@@ -118,6 +126,16 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
     //##########################################服务###################################################//
     // 服务 修改系统模式
     set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+
+    arming_client = nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
+
+    waypoint_setcurrent_client = nh.serviceClient<mavros_msgs::WaypointSetCurrent>("mavros/mission/set_current");
+
+    waypoint_pull_client = nh.serviceClient<mavros_msgs::WaypointPull>("mavros/mission/pull");
+
+    waypoint_push_client = nh.serviceClient<mavros_msgs::WaypointPush>("mavros/mission/push");
+
+    waypoint_clear_client = nh.serviceClient<mavros_msgs::WaypointClear>("mavros/mission/clear");
     //##########################################服务###################################################//
     //
 }

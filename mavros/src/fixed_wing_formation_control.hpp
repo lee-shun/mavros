@@ -26,6 +26,16 @@ private:
 
 	ros::ServiceClient set_mode_client;
 
+	ros::ServiceClient arming_client;
+
+	ros::ServiceClient waypoint_setcurrent_client;
+
+	ros::ServiceClient waypoint_pull_client;
+
+	ros::ServiceClient waypoint_push_client;
+
+	ros::ServiceClient waypoint_clear_client;
+
 	ros::Publisher fixed_wing_local_pos_sp_pub;
 
 	ros::Publisher fixed_wing_global_pos_sp_pub;
@@ -37,24 +47,39 @@ private:
 
 	ros::Subscriber // 【订阅】无人机ned三向加速度
 		fixed_wing_wind_estimate_from_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机ned三向加速度
 		fixed_wing_acc_ned_from_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机ned三向速度
 		fixed_wing_velocity_ned_fused_from_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机ned位置
 		fixed_wing_local_position_from_px4;
+
 	ros::Subscriber // 【订阅】无人机gps三向速度
 		fixed_wing_velocity_global_fused_from_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机ump位置
 		fixed_wing_umt_position_from_px4_sub;
+
 	ros::Subscriber //【订阅】无人机gps相对alt
 		fixed_wing_global_rel_alt_from_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机gps位置
 		fixed_wing_global_position_form_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机imu信息，
 		fixed_wing_imu_sub;
+
 	ros::Subscriber // 【订阅】无人机当前模式
 		fixed_wing_states_sub;
+
+	ros::Subscriber // 【订阅】无人机当前航点
+		fixed_wing_waypoints_sub;
+
+	ros::Subscriber // 【订阅】无人机到达的航点
+		fixed_wing_waypointsreach_sub;
 
 	struct _s_fixed_wing_status
 	{
