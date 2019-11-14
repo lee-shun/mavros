@@ -126,9 +126,27 @@ void _FIXED_WING_FORMATION_CONTROL::control_formation()
     //
 }
 
-void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4()
+void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
-    //
+
+    _FIXED_WING_MATHLIB math;
+
+    float angle[3], quat[4];
+
+    angle[0] = follower_setpoint.roll_angle;
+    angle[1] = follower_setpoint.pitch_angle;
+    angle[2] = follower_setpoint.yaw_angle;
+
+    math.euler_2_quaternion(angle, quat);
+
+    fixed_wing_sub_pub_pointer->att_sp.type_mask = 7;
+    fixed_wing_sub_pub_pointer->att_sp.orientation.w = quat[0];
+    fixed_wing_sub_pub_pointer->att_sp.orientation.x = quat[1];
+    fixed_wing_sub_pub_pointer->att_sp.orientation.y = quat[2];
+    fixed_wing_sub_pub_pointer->att_sp.orientation.z = quat[3];
+    fixed_wing_sub_pub_pointer->att_sp.thrust = follower_setpoint.thrust;
+
+    fixed_wing_local_att_sp_pub.publish(fixed_wing_sub_pub_pointer->att_sp);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
@@ -136,8 +154,15 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
     //
 }
 
-void _FIXED_WING_FORMATION_CONTROL::test(int argc, char **argv)
+void _FIXED_WING_FORMATION_CONTROL::test()
 {
+    follower_setpoint.pitch_angle = 0.2; //还有就是要注意正负号问题
+
+    follower_setpoint.roll_angle = 0.0;
+
+    follower_setpoint.yaw_angle = 0.0;
+
+    follower_setpoint.thrust = 0.5;
 }
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
@@ -297,9 +322,10 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         show_fixed_wing_status(1);
         show_fixed_wing_status(2);
 
-        control_formation();
+        test(); //这里面对att_sp赋值；
+        send_setpoint_to_px4(&fixed_wing_sub_pub);
 
-        send_setpoint_to_px4();
+        control_formation();
 
         send_setpoint_to_ground_station();
 

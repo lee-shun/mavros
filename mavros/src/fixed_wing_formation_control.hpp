@@ -12,6 +12,7 @@
 #include <fstream>
 #include <string>
 #include "fixed_wing_sub_pub.hpp"
+#include "fixed_wing_mathlib.hpp"
 
 using namespace std;
 
@@ -125,39 +126,49 @@ private:
 
 		float ground_speed_ned_param2{0};
 
-		float global_vel_x;
+		float global_vel_x{0};
 
-		float global_vel_y;
+		float global_vel_y{0};
 
-		float global_vel_z;
+		float global_vel_z{0};
 
-		float air_speed;
+		float air_speed{0};
 
-		float relative_hight;
+		float relative_hight{0};
 
-		float latitude;
+		float latitude{0};
 
-		float altitude;
+		float altitude{0};
 
-		float longtitude;
+		float longtitude{0};
 
-		float ned_pos_x;
+		float relative_alt{0};
 
-		float ned_pos_y;
+		float ned_pos_x{0};
 
-		float ned_pos_z;
+		float ned_pos_y{0};
 
-		float ned_vel_x;
+		float ned_pos_z{0};
 
-		float ned_vel_y;
+		float ned_vel_x{0};
 
-		float ned_vel_z;
+		float ned_vel_y{0};
 
-		float pitch_angle;
+		float ned_vel_z{0};
 
-		float yaw_angle;
+		float ned_acc_x{0};
 
-		float roll_angle;
+		float ned_acc_y{0};
+
+		float ned_acc_z{0};
+
+		float pitch_angle{0};
+
+		float yaw_angle{0};
+
+		float roll_angle{0};
+
+		float thrust{0};
 
 	} follower_setpoint;
 
@@ -176,7 +187,7 @@ public:
 
 	void show_fixed_wing_status(int PlaneID);
 
-	void test(int argc, char **argv);
+	void test();
 
 	void ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_poiter);
 
@@ -190,7 +201,7 @@ public:
 
 	void control_formation();
 
-	void send_setpoint_to_px4();
+	void send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
 	void send_setpoint_to_ground_station();
 };

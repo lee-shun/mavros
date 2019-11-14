@@ -66,7 +66,7 @@ public:
 
     mavros_msgs::GlobalPositionTarget global_pos_sp;
 
-    mavros_msgs::AttitudeTarget local_att_sp;
+    mavros_msgs::AttitudeTarget att_sp;
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
     float att_angle_Euler[3];  //无人机当前欧拉角(从飞控中读取)
