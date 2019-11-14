@@ -19,8 +19,39 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
-
 	float current_time;
+
+	ros::NodeHandle nh;
+
+	ros::Publisher fixed_wing_local_pos_sp_pub;
+
+	ros::Publisher fixed_wing_global_pos_sp_pub;
+
+	ros::Publisher fixed_wing_local_att_sp_pub;
+
+	ros::Subscriber // 【订阅】无人机ned三向加速度
+		fixed_wing_battrey_state_from_px4_sub;
+
+	ros::Subscriber // 【订阅】无人机ned三向加速度
+		fixed_wing_wind_estimate_from_px4_sub;
+	ros::Subscriber // 【订阅】无人机ned三向加速度
+		fixed_wing_acc_ned_from_px4_sub;
+	ros::Subscriber // 【订阅】无人机ned三向速度
+		fixed_wing_velocity_ned_fused_from_px4_sub;
+	ros::Subscriber // 【订阅】无人机ned位置
+		fixed_wing_local_position_from_px4;
+	ros::Subscriber // 【订阅】无人机gps三向速度
+		fixed_wing_velocity_global_fused_from_px4_sub;
+	ros::Subscriber // 【订阅】无人机ump位置
+		fixed_wing_umt_position_from_px4_sub;
+	ros::Subscriber //【订阅】无人机gps相对alt
+		fixed_wing_global_rel_alt_from_px4_sub;
+	ros::Subscriber // 【订阅】无人机gps位置
+		fixed_wing_global_position_form_px4_sub;
+	ros::Subscriber // 【订阅】无人机imu信息，
+		fixed_wing_imu_sub;
+	ros::Subscriber // 【订阅】无人机当前模式
+		fixed_wing_states_sub;
 
 	struct _s_fixed_wing_status
 	{
@@ -39,7 +70,7 @@ private:
 		float air_speed{-20000};
 
 		float wind_estimate_x{-20000};
-		
+
 		float wind_estimate_y{-20000};
 
 		float wind_estimate_z{-20000};
@@ -86,7 +117,6 @@ private:
 
 	} leader_status, follower_status;
 
-
 	struct _s_follower_setpiont
 	{
 		string mode;
@@ -131,10 +161,7 @@ private:
 
 	} follower_setpoint;
 
-
-
 public:
-
 	void write_to_files(string file_path_name, float time_stamp, float data);
 
 	float get_ros_time(ros::Time begin); //获取ros当前时间
@@ -151,7 +178,7 @@ public:
 
 	void test(int argc, char **argv);
 
-	void ros_sub_and_pub();
+	void ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_poiter);
 
 	void handle_status_from_receiver();
 
@@ -163,9 +190,9 @@ public:
 
 	void control_formation();
 
-    void send_setpoint_to_px4();
+	void send_setpoint_to_px4();
 
-    void send_setpoint_to_ground_station();
+	void send_setpoint_to_ground_station();
 };
 
 #endif

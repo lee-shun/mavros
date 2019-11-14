@@ -86,7 +86,7 @@
 /mavros/setpoint_position/global
 /mavros/setpoint_position/global_to_local
 /mavros/setpoint_position/local
-/mavros/setpoint_raw/attitude
+/mavros/setpoint_raw/attitude//由mavros订阅
 /mavros/setpoint_raw/global
 /mavros/setpoint_raw/local
 /mavros/setpoint_raw/target_attitude
