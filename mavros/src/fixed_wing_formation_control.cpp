@@ -148,9 +148,9 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.yaw_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[2];   //东向为零，向北转动为正，
 
     //以下为ned坐标系
-    follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.pose.position.x;
-    follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.pose.position.y;
-    follower_status.ned_pos_z = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.pose.position.z;
+    follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.x;
+    follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.y;
+    follower_status.ned_pos_z = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.z;
     follower_status.ned_vel_x = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.x;
     follower_status.ned_vel_y = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.y;
     follower_status.ned_vel_z = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
@@ -172,30 +172,36 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         fixed_wing_states_sub               //
         = nh.subscribe<mavros_msgs::State>  //
           ("mavros/state", 10, &_FIXED_WING_SUB_PUB::state_cb, &fixed_wing_sub_pub);
+    
     ros::Subscriber                      // 【订阅】无人机imu信息，
         fixed_wing_imu_sub               //
         = nh.subscribe<sensor_msgs::Imu> //
           ("mavros/imu/data", 10, &_FIXED_WING_SUB_PUB::imu_cb, &fixed_wing_sub_pub);
+    
     ros::Subscriber                             // 【订阅】无人机gps位置
         fixed_wing_global_position_form_px4_sub //
         = nh.subscribe<sensor_msgs::NavSatFix>  //
           ("mavros/global_position/global", 10, &_FIXED_WING_SUB_PUB::global_position_form_px4_cb, &fixed_wing_sub_pub);
+    
     ros::Subscriber                                              // 【订阅】无人机ump位置
         fixed_wing_umt_position_from_px4_sub                     //
-        = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped> //
+        = nh.subscribe<nav_msgs::Odometry> //
           ("mavros/global_position/local", 10, &_FIXED_WING_SUB_PUB::umt_position_from_px4_cb, &fixed_wing_sub_pub);
+    
     ros::Subscriber                                   // 【订阅】无人机gps三向速度
         fixed_wing_velocity_global_fused_from_px4_sub //
         = nh.subscribe<geometry_msgs::TwistStamped>   //
-          ("mavros/global_position/gp_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
+          ("mavros/global_position/raw/gps_vel", 10, &_FIXED_WING_SUB_PUB::velocity_global_fused_from_px4_cb, &fixed_wing_sub_pub);
+    
     ros::Subscriber                        // 【订阅】无人机ned位置
         fixed_wing_local_position_from_px4 //
-        = nh.subscribe<nav_msgs::Odometry> //
+        = nh.subscribe<geometry_msgs::PoseStamped> //
           ("mavros/local_position/pose", 10, &_FIXED_WING_SUB_PUB::local_position_from_px4_cb, &fixed_wing_sub_pub);
+    
     ros::Subscriber                                 // 【订阅】无人机ned三向速度
         fixed_wing_velocity_ned_fused_from_px4_sub  //
         = nh.subscribe<geometry_msgs::TwistStamped> //
-          ("mavros/local_position/velocity", 10, &_FIXED_WING_SUB_PUB::velocity_ned_fused_from_px4_cb, &fixed_wing_sub_pub);
+          ("/mavros/local_position/velocity_local", 10, &_FIXED_WING_SUB_PUB::velocity_ned_fused_from_px4_cb, &fixed_wing_sub_pub);
     //##########################################订阅消息###################################################//
 
     //##########################################发布消息###################################################//

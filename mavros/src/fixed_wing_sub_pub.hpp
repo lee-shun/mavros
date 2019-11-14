@@ -30,12 +30,12 @@ public:
     mavros_msgs::State current_state; //无人机当前状态[包含上锁状态 模式] (从飞控中读取)
     sensor_msgs::Imu imu;
     sensor_msgs::NavSatFix global_position_form_px4;
-    geometry_msgs::PoseWithCovarianceStamped umt_position_from_px4;
+    nav_msgs::Odometry umt_position_from_px4;
     geometry_msgs::TwistStamped velocity_global_fused_from_px4;
     geometry_msgs::TwistStamped velocity_ned_fused_from_px4;
-    //geometry_msgs::PoseStamped local_position_from_px4;
+    geometry_msgs::PoseStamped local_position_from_px4;
     
-    nav_msgs::Odometry local_position_from_px4;
+    //nav_msgs::Odometry local_position_from_px4;
     mavros_msgs::SetMode mode_cmd;
     
 
@@ -64,7 +64,7 @@ public:
         global_position_form_px4 = *msg;
     }
 
-    void umt_position_from_px4_cb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg)
+    void umt_position_from_px4_cb(const nav_msgs::Odometry::ConstPtr &msg)
     {
         umt_position_from_px4 = *msg;
     }
@@ -79,7 +79,7 @@ public:
         velocity_ned_fused_from_px4 = *msg;
     }
 
-    void local_position_from_px4_cb(const nav_msgs::Odometry ::ConstPtr &msg)
+    void local_position_from_px4_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     {
         local_position_from_px4 = *msg;
     }
