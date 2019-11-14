@@ -10,10 +10,14 @@
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h> //GPS Fix.
+#include <std_msgs/Float64.h>
+#include <sensor_msgs/BatteryState.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h> //UTM coords
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h> //Velocity fused by FCU
+#include<geometry_msgs/AccelWithCovarianceStamped.h>
+#include<geometry_msgs/TwistWithCovarianceStamped.h>
 
 #include "fixed_wing_mathlib.hpp"
 
@@ -28,15 +32,28 @@ public:
     _FIXED_WING_MATHLIB mathlib; //数学类
 
     mavros_msgs::State current_state; //无人机当前状态[包含上锁状态 模式] (从飞控中读取)
+    
     sensor_msgs::Imu imu;
+    
     sensor_msgs::NavSatFix global_position_form_px4;
+    
+    std_msgs::Float64 global_rel_alt_from_px4;
+    
     nav_msgs::Odometry umt_position_from_px4;
+    
     geometry_msgs::TwistStamped velocity_global_fused_from_px4;
+    
     geometry_msgs::TwistStamped velocity_ned_fused_from_px4;
+    
     geometry_msgs::PoseStamped local_position_from_px4;
     
-    //nav_msgs::Odometry local_position_from_px4;
-    mavros_msgs::SetMode mode_cmd;
+    geometry_msgs::AccelWithCovarianceStamped acc_ned_from_px4;
+
+    geometry_msgs::TwistWithCovarianceStamped wind_estimate_from_px4;\
+
+    sensor_msgs::BatteryState battrey_state_from_px4;
+    
+    ///mavros_msgs::SetMode mode_cmd;
     
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
@@ -64,6 +81,12 @@ public:
         global_position_form_px4 = *msg;
     }
 
+        void fixed_wing_global_rel_alt_from_px4_cb(const std_msgs::Float64::ConstPtr &msg)
+    {
+        global_rel_alt_from_px4 = *msg;
+    }
+    
+
     void umt_position_from_px4_cb(const nav_msgs::Odometry::ConstPtr &msg)
     {
         umt_position_from_px4 = *msg;
@@ -83,6 +106,23 @@ public:
     {
         local_position_from_px4 = *msg;
     }
+
+    void acc_ned_from_px4_cb(const geometry_msgs::AccelWithCovarianceStamped::ConstPtr &msg)
+    {
+        acc_ned_from_px4 = *msg;
+    }
+
+    void wind_estimate_from_px4_cb(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg)
+    {
+        wind_estimate_from_px4 = *msg;
+    }
+
+    void battrey_state_from_px4_cb(const sensor_msgs::BatteryState::ConstPtr &msg)
+    {
+        battrey_state_from_px4 = *msg;
+    }
+
+    
 };
 
 #endif

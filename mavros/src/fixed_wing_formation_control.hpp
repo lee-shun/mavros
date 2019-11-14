@@ -26,43 +26,63 @@ private:
 	{
 		string mode;
 
-		float ground_speed_ned_param1{0};
+		float ground_speed_ned_param1{-20000};
 
-		float ground_speed_ned_param2{0};
+		float ground_speed_ned_param2{-20000};
 
-		float global_vel_x;
+		float global_vel_x{-20000};
 
-		float global_vel_y;
+		float global_vel_y{-20000};
 
-		float global_vel_z;
+		float global_vel_z{-20000};
 
-		float air_speed;
+		float air_speed{-20000};
 
-		float relative_hight;
+		float wind_estimate_x{-20000};
+		
+		float wind_estimate_y{-20000};
 
-		float latitude;
+		float wind_estimate_z{-20000};
 
-		float altitude;
+		float relative_hight{-20000};
 
-		float longtitude;
+		float latitude{-20000};
 
-		float ned_pos_x;
+		float altitude{-20000};
 
-		float ned_pos_y;
+		float longtitude{-20000};
 
-		float ned_pos_z;
+		float relative_alt{-20000};
 
-		float ned_vel_x;
+		float ned_pos_x{-20000};
 
-		float ned_vel_y;
+		float ned_pos_y{-20000};
 
-		float ned_vel_z;
+		float ned_pos_z{-20000};
 
-		float pitch_angle;
+		float ned_vel_x{-20000};
 
-		float yaw_angle;
+		float ned_vel_y{-20000};
 
-		float roll_angle;
+		float ned_vel_z{-20000};
+
+		float ned_acc_x{-20000};
+
+		float ned_acc_y{-20000};
+
+		float ned_acc_z{-20000};
+
+		float pitch_angle{-20000};
+
+		float yaw_angle{-20000};
+
+		float roll_angle{-20000};
+
+		float battery_voltage{-20000};
+
+		float battery_precentage{-20000};
+
+		float battery_current{-20000};
 
 	} leader_status, follower_status;
 
