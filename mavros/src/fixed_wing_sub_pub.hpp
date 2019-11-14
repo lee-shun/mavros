@@ -59,7 +59,7 @@ public:
 
     sensor_msgs::BatteryState battrey_state_from_px4;
 
-    ///mavros_msgs::SetMode mode_cmd;
+    mavros_msgs::SetMode mode_cmd;
 
     //发布的数据暂时容器
     mavros_msgs::PositionTarget local_pos_sp;

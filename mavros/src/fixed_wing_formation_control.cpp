@@ -117,7 +117,7 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
 
     //##########################################服务###################################################//
     // 服务 修改系统模式
-    //ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+    set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
     //##########################################服务###################################################//
     //
 }
@@ -156,26 +156,24 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
 
 void _FIXED_WING_FORMATION_CONTROL::test()
 {
-    follower_setpoint.pitch_angle = 0.2; //还有就是要注意正负号问题
+    follower_setpoint.pitch_angle = -0.2; //还有就是要注意正负号问题
 
     follower_setpoint.roll_angle = 0.0;
 
     follower_setpoint.yaw_angle = 0.0;
 
-    follower_setpoint.thrust = 0.5;
+    follower_setpoint.thrust = 0.8;
 }
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
 {
-    //follower_setpoint.mode = "OFFBOARD"; //指定飞机的模式
 
-    // if (follower_status.mode != follower_setpoint.mode)//不知道为啥老是说不支持的模式
-    // {
-    //     cout<<"have alreay got in the set(if)"<<endl;
-    //     fixed_wing_sub_pub.mode_cmd.request.custom_mode = "OFFBOARD";
+    if (follower_status.mode != setpoint_mode)
+    {
+        fixed_wing_sub_pub_pointer->mode_cmd.request.custom_mode = setpoint_mode;
 
-    //     set_mode_client.call(fixed_wing_sub_pub.mode_cmd);
-    // }
+        set_mode_client.call(fixed_wing_sub_pub_pointer->mode_cmd);
+    }
 }
 
 void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
@@ -324,6 +322,8 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         test(); //这里面对att_sp赋值；
         send_setpoint_to_px4(&fixed_wing_sub_pub);
+        follower_setpoint.mode = "OFFBOARD";
+        set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
 
         control_formation();
 

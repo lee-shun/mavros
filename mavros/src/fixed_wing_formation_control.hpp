@@ -24,6 +24,8 @@ private:
 
 	ros::NodeHandle nh;
 
+	ros::ServiceClient set_mode_client;
+
 	ros::Publisher fixed_wing_local_pos_sp_pub;
 
 	ros::Publisher fixed_wing_global_pos_sp_pub;
