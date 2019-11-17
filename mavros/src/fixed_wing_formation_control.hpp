@@ -81,6 +81,11 @@ private:
 	ros::Subscriber // 【订阅】无人机到达的航点
 		fixed_wing_waypointsreach_sub;
 
+	ros::Subscriber // 【订阅】无人机的高度
+		fixed_wing_altitude_from_px4_sub;		
+
+
+
 	struct _s_fixed_wing_status
 	{
 		string mode;
@@ -112,6 +117,8 @@ private:
 		float longtitude{-20000};
 
 		float relative_alt{-20000};
+
+		float ned_altitude{-20000};
 
 		float ned_pos_x{-20000};
 

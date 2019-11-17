@@ -111,6 +111,10 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<mavros_msgs::WaypointReached> //
           ("mavros/mission/reached", 10, &_FIXED_WING_SUB_PUB::waypoints_reached_from_px4_cb, fixed_wing_sub_pub_poiter);
 
+    fixed_wing_altitude_from_px4_sub          //订阅高度
+        = nh.subscribe<mavros_msgs::Altitude> //
+          ("/mavros/altitude", 10, &_FIXED_WING_SUB_PUB::altitude_from_px4_cb, fixed_wing_sub_pub_poiter);
+
     //##########################################订阅消息###################################################//
 
     //##########################################发布消息###################################################//
@@ -233,6 +237,11 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
+    cout << "高度【local,relative】" << p->ned_altitude << " [m] " //待完成
+         << p->relative_hight << " [m] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
     cout << "ned下的速度【XYZ】" << p->ned_vel_x << " [m/s] " //待完成
          << p->ned_vel_y << " [m/s] "
          << p->ned_vel_z << " [m/s] " << endl;
@@ -325,6 +334,10 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.ned_acc_x = fixed_wing_sub_pub_pointer->acc_ned_from_px4.accel.accel.linear.x;
     follower_status.ned_acc_y = fixed_wing_sub_pub_pointer->acc_ned_from_px4.accel.accel.linear.y;
     follower_status.ned_acc_z = fixed_wing_sub_pub_pointer->acc_ned_from_px4.accel.accel.linear.z;
+
+    //以下来自altitude
+    follower_status.relative_hight = fixed_wing_sub_pub_pointer->altitude_from_px4.relative;
+    follower_status.ned_altitude = fixed_wing_sub_pub_pointer->altitude_from_px4.local;
 
     follower_status.air_speed = 0;
     //write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
