@@ -157,7 +157,7 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fi
 
     math.euler_2_quaternion(angle, quat);
 
-    fixed_wing_sub_pub_pointer->att_sp.type_mask = 71;//1+2+64+128 body.rate_x,body.rate_y,body.rate_z thrust..
+    fixed_wing_sub_pub_pointer->att_sp.type_mask = 7; //1+2+4+64+128 body.rate_x,body.rate_y,body.rate_z thrust..
     fixed_wing_sub_pub_pointer->att_sp.orientation.w = quat[0];
     fixed_wing_sub_pub_pointer->att_sp.orientation.x = quat[1];
     fixed_wing_sub_pub_pointer->att_sp.orientation.y = quat[2];
@@ -165,6 +165,13 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fi
     fixed_wing_sub_pub_pointer->att_sp.thrust = follower_setpoint.thrust;
 
     fixed_wing_local_att_sp_pub.publish(fixed_wing_sub_pub_pointer->att_sp);
+
+    fixed_wing_sub_pub_pointer->att_sp_Euler[0] = angle[0];
+    fixed_wing_sub_pub_pointer->att_sp_Euler[1] = angle[1];
+    fixed_wing_sub_pub_pointer->att_sp_Euler[2] = angle[2];
+    fixed_wing_sub_pub_pointer->thrust_sp = follower_setpoint.thrust;
+
+    show_control_state(fixed_wing_sub_pub_pointer);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
@@ -268,6 +275,18 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
     for (int i = 1; i <= the_space_between_blocks; i++)
         cout << endl;
 }
+
+void _FIXED_WING_FORMATION_CONTROL::show_control_state(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
+{
+    cout << "***************以下是从机的控制状态***************" << endl;
+    cout << "att_sp.type_mask = " << float(fixed_wing_sub_pub_pointer->att_sp.type_mask) << endl;
+    cout << "att_sp_Euler[0] = " << fixed_wing_sub_pub_pointer->att_sp_Euler[0] << endl;
+    cout << "att_sp_Euler[1] = " << fixed_wing_sub_pub_pointer->att_sp_Euler[1] << endl;
+    cout << "att_sp_Euler[2] = " << fixed_wing_sub_pub_pointer->att_sp_Euler[2] << endl;
+    cout << "thrust_sp = " << fixed_wing_sub_pub_pointer->thrust_sp << endl;
+    cout << "***************以上是从机的控制状态***************" << endl;
+}
+
 bool _FIXED_WING_FORMATION_CONTROL::update_leader_status()
 {
     //
@@ -339,6 +358,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         show_fixed_wing_status(2);
 
         test(); //这里面对att_sp赋值；
+
         send_setpoint_to_px4(&fixed_wing_sub_pub);
         follower_setpoint.mode = "OFFBOARD";
         set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);

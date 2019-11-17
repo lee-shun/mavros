@@ -15,7 +15,6 @@
 #include <mavros_msgs/WaypointPush.h>
 #include <mavros_msgs/WaypointClear.h>
 
-
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h> //GPS Fix.
 #include <std_msgs/Float64.h>
@@ -70,7 +69,7 @@ public:
     mavros_msgs::WaypointList waypoint_list;
 
     mavros_msgs::WaypointReached waypoint_reached;
-    
+
     //服务项暂存容器
     mavros_msgs::SetMode mode_cmd;
 
@@ -90,6 +89,9 @@ public:
     mavros_msgs::GlobalPositionTarget global_pos_sp;
 
     mavros_msgs::AttitudeTarget att_sp;
+
+    float att_sp_Euler[3];
+    float thrust_sp;
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
     float att_angle_Euler[3];  //无人机当前欧拉角(从飞控中读取)
@@ -165,8 +167,6 @@ public:
     {
         waypoint_list = *msg;
     }
-
-
 };
 
 #endif

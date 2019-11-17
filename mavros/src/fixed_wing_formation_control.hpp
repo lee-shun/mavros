@@ -214,6 +214,8 @@ public:
 
 	void show_fixed_wing_status(int PlaneID);
 
+	void show_control_state(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
+
 	void test();
 
 	void ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_poiter);
