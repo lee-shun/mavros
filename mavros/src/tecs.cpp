@@ -1,4 +1,5 @@
 /*tecs控制器---魔改版*/
+/*来源为px4*/
 #include "tecs.hpp"
 
 void TECS::update_state(float time_now, float baro_altitude, float airspeed, const float rotMat[3][3],
@@ -138,12 +139,12 @@ void TECS::_update_speed(float time_now, float airspeed_demand, float indicated_
     float now = time_now;
     float DT = max((now - _update_speed_last_usec), 0) * 1.0e-6f;
 
-    /*********阿木实验室出品****************
+    /**************************
 	*
 	* 将等效空速转换为实际的空速
 	* 其中EAS为等效空速，TAS为实际空速，一般情况下，两者比例为1
 	*
-	**********阿木实验室出品****************/
+	***************************/
 
     _EAS_dem = airspeed_demand;
     _TAS_dem = _EAS_dem * EAS2TAS;
@@ -167,11 +168,11 @@ void TECS::_update_speed(float time_now, float airspeed_demand, float indicated_
         DT = DT_DEFAULT; // when first starting TECS, use small time constant
     }
 
-    /*********阿木实验室出品****************
+    /**************************
 	*
 	* _integ4_state 为空速的加速度，先对这个加速度量做一个滤波
 	*
-	**********阿木实验室出品****************/
+	***************************/
     float aspdErr = (_EAS * EAS2TAS) - _integ5_state;
     float integ4_input = aspdErr * _spdCompFiltOmega * _spdCompFiltOmega;
 
@@ -183,12 +184,12 @@ void TECS::_update_speed(float time_now, float airspeed_demand, float indicated_
 
     _integ4_state = _integ4_state + integ4_input * DT;
 
-    /*********阿木实验室出品****************
+    /**************************
 	*
 	* 空速度的加速度平滑完了之后，再对_integ5_state即空速做滤波；
 	* 最后做一个保护
 	*
-	**********阿木实验室出品****************/
+	***************************/
     float integ5_input = _integ4_state + _vel_dot + aspdErr * _spdCompFiltOmega * 1.4142f;
     _integ5_state = _integ5_state + integ5_input * DT;
 
@@ -415,14 +416,14 @@ void TECS::_update_throttle(float throttle_cruise, const float rotMat[3][3])
 void TECS::_update_pitch()
 {
 
-    /*********阿木实验室出品****************
+    /**************************
 	*
 	* 计算动能势能的控制权重。
 	* 1 代表两者一样，正常情况下该权重系数都为1；
 	* 0 代表势能控制，即此时不管俯仰角，只控高度，没有空速测量值的时候，会进入这种情况；
 	* 2 代表动能控制，失速、起飞、爬升会进入这种情况
 	*
-	**********阿木实验室出品****************/
+	***************************/
     float SKE_weighting = constrain(_spdWeight, 0.0f, 2.0f);
 
     if ((_underspeed || _climbOutDem) && airspeed_sensor_enabled())
