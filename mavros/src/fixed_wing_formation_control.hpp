@@ -96,6 +96,10 @@ private:
 
 	struct _s_fixed_wing_status
 	{
+		bool altitude_lock;
+
+		bool in_air;
+
 		string mode;
 
 		float rotmat[3][3];
@@ -228,8 +232,28 @@ private:
 
 	} follower_setpoint;
 
+	struct fixed_wing_params
+	{
+		int EAS2TAS;
+
+		bool climboutdem;
+
+		float climbout_pitch_min_rad;
+
+		float throttle_min;
+
+		float throttle_max;
+
+		float throttle_cruise;
+
+		float pitch_min_rad;
+
+		float pitch_max_rad;
+	} params;
+
 public:
-	void write_to_files(string file_path_name, float time_stamp, float data);
+	void
+	write_to_files(string file_path_name, float time_stamp, float data);
 
 	float get_ros_time(ros::Time begin); //获取ros当前时间
 
@@ -266,6 +290,9 @@ public:
 	void send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
 	void send_setpoint_to_ground_station();
+
+	void control_vertical(float current_time);
+	void control_lateral(float current_time);
 };
 
 #endif

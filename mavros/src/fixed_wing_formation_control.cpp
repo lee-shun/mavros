@@ -409,6 +409,31 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.battery_voltage = fixed_wing_sub_pub_pointer->battrey_state_from_px4.voltage;
 }
 
+void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
+{
+    _tecs.update_state(current_time, follower_status.altitude,
+                       follower_status.air_speed, follower_status.rotmat,
+                       follower_status.body_acc, follower_status.ned_acc,follower_status.altitude_lock, follower_status.in_air);
+
+    _tecs.update_pitch_throttle(current_time, follower_status.rotmat, follower_status.pitch_angle,
+                                follower_status.altitude, follower_setpoint.altitude, follower_setpoint.air_speed,
+                                follower_status.air_speed, params.EAS2TAS, params.climboutdem,
+                                params.climbout_pitch_min_rad, params.throttle_min, params.throttle_max,
+                                params.throttle_cruise, params.pitch_min_rad, params.pitch_max_rad);
+    
+    struct TECS::tecs_state tecs_outputs;
+
+    _tecs.get_tecs_state(tecs_outputs);
+
+    follower_setpoint.pitch_angle = tecs_outputs.pitch_integ;
+    follower_setpoint.thrust = tecs_outputs.throttle_integ;
+
+}
+void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
+{
+    //
+}
+
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 {
 
@@ -422,6 +447,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         current_time = get_ros_time(begin_time);
 
         update_follwer_status(&fixed_wing_sub_pub);
+
         update_leader_status();
 
         if (simulate_type == 0 && follower_status.mode != "OFFBOARD")
@@ -436,17 +462,23 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
                 set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
             }
         }
+
         show_fixed_wing_status(1);
+
         show_fixed_wing_status(2);
-        _tecs.update_state(current_time, follower_status.altitude, follower_status.air_speed, follower_status.rotmat,
-                           follower_status.body_acc, follower_status.ned_acc, 0, 1);
+
+        control_vertical(current_time);
+
+        control_lateral(current_time);
 
         send_setpoint_to_px4(&fixed_wing_sub_pub);
+
         control_formation();
 
         send_setpoint_to_ground_station();
 
         ros::spinOnce(); //挂起一段时间，保证周期的速度
+
         rate.sleep();
     }
 }
