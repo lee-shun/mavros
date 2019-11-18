@@ -12,7 +12,8 @@
 #include <fstream>
 #include <string>
 #include "fixed_wing_sub_pub.hpp"
-#include "fixed_wing_mathlib.hpp"
+#include "mathlib.h"
+#include "tecs.hpp"
 
 using namespace std;
 

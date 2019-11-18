@@ -151,15 +151,13 @@ void _FIXED_WING_FORMATION_CONTROL::control_formation()
 void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
 
-    _FIXED_WING_MATHLIB math;
-
     float angle[3], quat[4];
 
     angle[0] = follower_setpoint.roll_angle;
     angle[1] = follower_setpoint.pitch_angle;
     angle[2] = follower_setpoint.yaw_angle;
 
-    math.euler_2_quaternion(angle, quat);
+    euler_2_quaternion(angle, quat);
 
     fixed_wing_sub_pub_pointer->att_sp.type_mask = 7; //1+2+4+64+128 body.rate_x,body.rate_y,body.rate_z thrust..
     fixed_wing_sub_pub_pointer->att_sp.orientation.w = quat[0];
