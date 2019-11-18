@@ -27,6 +27,33 @@ float _FIXED_WING_FORMATION_CONTROL::get_ros_time(ros::Time begin)
     return (currTimeSec + currTimenSec);
 }
 
+float _FIXED_WING_FORMATION_CONTROL::get_air_speed(int type)
+{
+    if (type == 2)
+    {
+        return follower_status.air_speed;
+    }
+    else
+    {
+        return sqrt(follower_status.global_vel_x * follower_status.global_vel_x   //
+                    + follower_status.global_vel_y * follower_status.global_vel_y //
+                    + follower_status.global_vel_z * follower_status.global_vel_z //
+        );
+    }
+}
+
+void _FIXED_WING_FORMATION_CONTROL::update_rotmat()
+{
+    float angle[3], quat[4];
+
+    angle[0] = follower_status.roll_angle;
+    angle[1] = follower_status.pitch_angle;
+    angle[2] = follower_status.yaw_angle;
+
+    euler_2_quaternion(angle, quat);
+
+    quat_2_rotmax(quat, follower_status.rotmat);
+}
 void _FIXED_WING_FORMATION_CONTROL::handle_status_from_receiver()
 {
     //
@@ -183,6 +210,7 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
 
 void _FIXED_WING_FORMATION_CONTROL::test()
 {
+
     follower_setpoint.pitch_angle = -0.2; //还有就是要注意正负号问题
 
     follower_setpoint.roll_angle = 0.0;
@@ -229,6 +257,12 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
+    cout << "body下的加速度【XYZ】" << p->body_acc_x << " [m/ss] " //待完成
+         << p->body_acc_y << " [m/ss] "
+         << p->body_acc_z << " [m/ss] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
     cout << "ned下的位置【XYZ】" << p->ned_pos_x << " [m] " //待完成
          << p->ned_pos_y << " [m] "
          << p->ned_pos_z << " [m] " << endl;
@@ -246,7 +280,7 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
-    cout << "ned下的加速度【XYZ】(旋翼和固定翼都没有)" << p->ned_acc_x << " [m/ss] " //待完成
+    cout << "ned下的加速度【XYZ】(由旋转矩阵得来)" << p->ned_acc_x << " [m/ss] " //待完成
          << p->ned_acc_y << " [m/ss] "
          << p->ned_acc_z << " [m/ss] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
@@ -320,6 +354,9 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.pitch_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[1]; //以欧美系建立机体坐标系，前向x，向下y，向左z
     follower_status.yaw_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[2];   //东向为零，向北转动为正，
 
+    //以下为旋转矩阵（ned和body）
+    update_rotmat();
+
     //以下为ned坐标系
     follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.x;
     follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.y;
@@ -329,15 +366,28 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.ned_vel_y = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.y;
     follower_status.ned_vel_z = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
 
-    follower_status.ned_acc_x = fixed_wing_sub_pub_pointer->acc_ned_from_px4.accel.accel.linear.x;
-    follower_status.ned_acc_y = fixed_wing_sub_pub_pointer->acc_ned_from_px4.accel.accel.linear.y;
-    follower_status.ned_acc_z = fixed_wing_sub_pub_pointer->acc_ned_from_px4.accel.accel.linear.z;
+    //以下为体轴系
+    follower_status.body_acc_x = fixed_wing_sub_pub_pointer->imu.linear_acceleration.x;
+    follower_status.body_acc_y = fixed_wing_sub_pub_pointer->imu.linear_acceleration.y;
+    follower_status.body_acc_z = fixed_wing_sub_pub_pointer->imu.linear_acceleration.z;
+
+    follower_status.body_acc[0] = fixed_wing_sub_pub_pointer->imu.linear_acceleration.x;
+    follower_status.body_acc[1] = fixed_wing_sub_pub_pointer->imu.linear_acceleration.y;
+    follower_status.body_acc[2] = fixed_wing_sub_pub_pointer->imu.linear_acceleration.z;
+
+    //把体轴系下的加速度转到ned下
+    matrix_plus_vector_3(follower_status.ned_acc, follower_status.rotmat, follower_status.body_acc);
+
+    follower_status.ned_acc_x = follower_status.ned_acc[0];
+    follower_status.ned_acc_y = follower_status.ned_acc[1];
+    follower_status.ned_acc_z = follower_status.ned_acc[2];
 
     //以下来自altitude
     follower_status.relative_hight = fixed_wing_sub_pub_pointer->altitude_from_px4.relative;
     follower_status.ned_altitude = fixed_wing_sub_pub_pointer->altitude_from_px4.local;
 
-    follower_status.air_speed = 0;
+    follower_status.air_speed = get_air_speed(1);
+
     //write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
     follower_status.wind_estimate_x = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.x;
     follower_status.wind_estimate_y = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.y;
@@ -354,8 +404,6 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
     ros::Rate rate(10.0);
     ros::Time begin_time = ros::Time::now(); // 记录启控时间
 
-    _FIXED_WING_SUB_PUB fixed_wing_sub_pub;
-
     ros_sub_and_pub(&fixed_wing_sub_pub);
 
     while (ros::ok())
@@ -365,15 +413,24 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         update_follwer_status(&fixed_wing_sub_pub);
         update_leader_status();
 
+        if (simulate_type == 0 && follower_status.mode != "OFFBOARD")
+        {
+
+            cout << "当前不是OFFBOARD，是否进行强制进入？强制请输入1，仅监视请输入2" << endl;
+            cin >> simulate_type;
+
+            if (simulate_type == 1)
+            {
+                follower_setpoint.mode = "OFFBOARD";
+                set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
+            }
+        }
         show_fixed_wing_status(1);
         show_fixed_wing_status(2);
-
-        test(); //这里面对att_sp赋值；
+        _tecs.update_state(current_time, follower_status.altitude, follower_status.air_speed, follower_status.rotmat,
+        follower_status.body_acc, follower_status.ned_acc, 0, 1);
 
         send_setpoint_to_px4(&fixed_wing_sub_pub);
-        follower_setpoint.mode = "OFFBOARD";
-        set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
-
         control_formation();
 
         send_setpoint_to_ground_station();

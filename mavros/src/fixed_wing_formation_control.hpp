@@ -10,6 +10,7 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <fstream>
+#include <math.h>
 #include <string>
 #include "fixed_wing_sub_pub.hpp"
 #include "mathlib.h"
@@ -21,6 +22,12 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
+	int simulate_type{0};
+
+	_FIXED_WING_SUB_PUB fixed_wing_sub_pub;
+
+	TECS _tecs;
+
 	float current_time;
 
 	ros::NodeHandle nh;
@@ -83,13 +90,13 @@ private:
 		fixed_wing_waypointsreach_sub;
 
 	ros::Subscriber // 【订阅】无人机的高度
-		fixed_wing_altitude_from_px4_sub;		
-
-
+		fixed_wing_altitude_from_px4_sub;
 
 	struct _s_fixed_wing_status
 	{
 		string mode;
+
+		float rotmat[3][3];
 
 		float ground_speed_ned_param1{-20000};
 
@@ -138,6 +145,16 @@ private:
 		float ned_acc_y{-20000};
 
 		float ned_acc_z{-20000};
+
+		float ned_acc[3];
+
+		float body_acc_x{-20000};
+
+		float body_acc_y{-20000};
+
+		float body_acc_z{-20000};
+
+		float body_acc[3];
 
 		float pitch_angle{-20000};
 
@@ -212,9 +229,13 @@ public:
 
 	float get_ros_time(ros::Time begin); //获取ros当前时间
 
+	float get_air_speed(int type);
+
 	void run(int argc, char **argv);
 
 	bool update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
+
+	void update_rotmat();
 
 	bool set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode);
 
