@@ -15,6 +15,7 @@
 #include <mavros_msgs/WaypointPush.h>
 #include <mavros_msgs/WaypointClear.h>
 #include <mavros_msgs/Altitude.h>
+#include <mavros_msgs/VFR_HUD.h>
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h> //GPS Fix.
@@ -72,6 +73,8 @@ public:
     mavros_msgs::WaypointReached waypoint_reached;
 
     mavros_msgs::Altitude altitude_from_px4;
+
+    mavros_msgs::VFR_HUD air_ground_speed_from_px4;
 
     //服务项暂存容器
     mavros_msgs::SetMode mode_cmd;
@@ -174,6 +177,11 @@ public:
     void altitude_from_px4_cb(const mavros_msgs::Altitude::ConstPtr &msg)
     {
         altitude_from_px4 = *msg;
+    }
+
+    void air_ground_speed_from_px4_cb(const mavros_msgs::VFR_HUD::ConstPtr &msg)
+    {
+        air_ground_speed_from_px4 = *msg;
     }
 };
 

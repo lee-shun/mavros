@@ -91,6 +91,8 @@ private:
 
 	ros::Subscriber // 【订阅】无人机的高度
 		fixed_wing_altitude_from_px4_sub;
+	ros::Subscriber // 【订阅】无人机的空速地速
+		fixed_wing_air_ground_speed_from_px4_sub;
 
 	struct _s_fixed_wing_status
 	{
@@ -101,6 +103,8 @@ private:
 		float ground_speed_ned_param1{-20000};
 
 		float ground_speed_ned_param2{-20000};
+
+		float ground_speed{-20000};
 
 		float global_vel_x{-20000};
 

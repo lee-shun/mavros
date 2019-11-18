@@ -142,6 +142,10 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<mavros_msgs::Altitude> //
           ("/mavros/altitude", 10, &_FIXED_WING_SUB_PUB::altitude_from_px4_cb, fixed_wing_sub_pub_poiter);
 
+    fixed_wing_air_ground_speed_from_px4_sub //订阅空速、地速
+        = nh.subscribe<mavros_msgs::VFR_HUD> //
+          ("/mavros/vfr_hud", 10, &_FIXED_WING_SUB_PUB::air_ground_speed_from_px4_cb, fixed_wing_sub_pub_poiter);
+
     //##########################################订阅消息###################################################//
 
     //##########################################发布消息###################################################//
@@ -299,6 +303,11 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
+    cout << "空速以及地速【air,ground】" << p->air_speed << " [m/s] " //待完成
+         << p->ground_speed << " [m/s] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
     cout << "风估计【x,y,z】" << p->wind_estimate_x << " [m/s] " //待完成
          << p->wind_estimate_y << " [m/s] "
          << p->wind_estimate_z << " [m/s] " << endl;
@@ -386,7 +395,9 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.relative_hight = fixed_wing_sub_pub_pointer->altitude_from_px4.relative;
     follower_status.ned_altitude = fixed_wing_sub_pub_pointer->altitude_from_px4.local;
 
-    follower_status.air_speed = get_air_speed(1);
+    //空速和地速
+    follower_status.air_speed = fixed_wing_sub_pub_pointer->air_ground_speed_from_px4.airspeed;
+    follower_status.ground_speed = fixed_wing_sub_pub_pointer->air_ground_speed_from_px4.groundspeed;
 
     //write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
     follower_status.wind_estimate_x = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.x;
@@ -428,7 +439,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         show_fixed_wing_status(1);
         show_fixed_wing_status(2);
         _tecs.update_state(current_time, follower_status.altitude, follower_status.air_speed, follower_status.rotmat,
-        follower_status.body_acc, follower_status.ned_acc, 0, 1);
+                           follower_status.body_acc, follower_status.ned_acc, 0, 1);
 
         send_setpoint_to_px4(&fixed_wing_sub_pub);
         control_formation();

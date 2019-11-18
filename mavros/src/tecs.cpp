@@ -1,6 +1,6 @@
 /*tecs控制器---魔改版*/
 /*来源为px4*/
-#include "tecs.hpp"
+//#include "tecs.hpp"
 
 void TECS::update_state(float time_now, float baro_altitude, float airspeed, const float rotMat[3][3],
                       const float accel_body[3], const float accel_earth[3], bool altitude_lock, bool in_air)

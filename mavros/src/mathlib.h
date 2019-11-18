@@ -9,6 +9,10 @@ float max(const float a, const float b)
 {
     return (a > b) ? a : b;
 }
+float min(const float a, const float b)
+{
+    return (a < b) ? a : b;
+}
 
 void quaternion_2_euler(float quat[4], float angle[3])
 {
