@@ -96,9 +96,9 @@ private:
 
 	struct _s_fixed_wing_status
 	{
-		bool altitude_lock;
+		bool altitude_lock{false};
 
-		bool in_air;
+		bool in_air{true};
 
 		string mode;
 
@@ -230,25 +230,25 @@ private:
 
 		float thrust{0};
 
-	} follower_setpoint;
+	} follower_setpoint, leader_setpoint;
 
 	struct fixed_wing_params
 	{
-		int EAS2TAS;
+		int EAS2TAS{1};
 
-		bool climboutdem;
+		bool climboutdem{false};
 
-		float climbout_pitch_min_rad;
+		float climbout_pitch_min_rad{0.2};
 
-		float throttle_min;
+		float throttle_min{0.1};
 
-		float throttle_max;
+		float throttle_max{1};
 
-		float throttle_cruise;
+		float throttle_cruise{0.1};
 
-		float pitch_min_rad;
+		float pitch_min_rad{-45};
 
-		float pitch_max_rad;
+		float pitch_max_rad{45};
 	} params;
 
 public:
@@ -270,6 +270,8 @@ public:
 	bool update_leader_status();
 
 	void show_fixed_wing_status(int PlaneID);
+	
+	void show_fixed_wing_setpoint(int PlaneID);
 
 	void show_control_state(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 

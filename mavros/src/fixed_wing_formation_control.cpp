@@ -204,7 +204,7 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fi
     fixed_wing_sub_pub_pointer->att_sp_Euler[2] = angle[2];
     fixed_wing_sub_pub_pointer->thrust_sp = follower_setpoint.thrust;
 
-    show_control_state(fixed_wing_sub_pub_pointer);
+    //show_control_state(fixed_wing_sub_pub_pointer);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
@@ -215,13 +215,15 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
 void _FIXED_WING_FORMATION_CONTROL::test()
 {
 
-    follower_setpoint.pitch_angle = -0.2; //还有就是要注意正负号问题
-
+    //当前是屏蔽角速度控制的mavros
     follower_setpoint.roll_angle = 0.0;
 
     follower_setpoint.yaw_angle = 1.5707;
 
-    follower_setpoint.thrust = 0.8;
+    //将期望高度和期望空速赋值
+    follower_setpoint.air_speed = 18.5;
+
+    follower_setpoint.altitude = 650;
 }
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
@@ -326,8 +328,46 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
         cout << endl;
 }
 
+void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_setpoint(int PlaneID)
+{
+    _s_follower_setpiont *p;
+    if (2 == PlaneID)
+    {
+        p = &follower_setpoint;
+    }
+    else if (1 == PlaneID)
+    {
+        p = &leader_setpoint;
+    }
+    cout << "***************以下是" << PlaneID << "号飞机期望值******************" << endl;
+    cout << "***************以下是" << PlaneID << "号飞机期望值******************" << endl;
+    cout << "Time: " << current_time << " [s] " << endl;
+    cout << "Mode : [ " << p->mode << " ]" << endl;
+
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+    cout << "飞机期望高度与期望空速【altitude(absolute),airspeed】" << p->altitude << " [m] "
+         << p->air_speed << " [m/s] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
+    cout << "飞机四通道期望值【pitch，roll，yaw，thrust】" << p->pitch_angle * 57.3 << " [deg] "
+         << p->roll_angle * 57.3 << " [deg] "
+         << p->yaw_angle * 57.3 << " [deg] "
+         << p->thrust << " [] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
+    cout << "***************以上是" << PlaneID << "号飞机期望值******************" << endl;
+    cout << "***************以上是" << PlaneID << "号飞机期望值******************" << endl;
+    for (int i = 1; i <= the_space_between_blocks; i++)
+        cout << endl;
+}
+
 void _FIXED_WING_FORMATION_CONTROL::show_control_state(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
+    for (int i = 1; i <= the_space_between_blocks; i++)
+        cout << endl;
     cout << "***************以下是从机的控制状态***************" << endl;
     cout << "att_sp.type_mask = " << float(fixed_wing_sub_pub_pointer->att_sp.type_mask) << endl;
     cout << "att_sp_Euler[0] = " << fixed_wing_sub_pub_pointer->att_sp_Euler[0] << endl;
@@ -411,23 +451,24 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
 
 void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 {
-    _tecs.update_state(current_time, follower_status.altitude,
-                       follower_status.air_speed, follower_status.rotmat,
-                       follower_status.body_acc, follower_status.ned_acc,follower_status.altitude_lock, follower_status.in_air);
+
+    _tecs.enable_airspeed(true);
+    // _tecs.update_state(current_time, follower_status.altitude,
+    //                    follower_status.air_speed, follower_status.rotmat,
+    //                    follower_status.body_acc, follower_status.ned_acc, follower_status.altitude_lock, follower_status.in_air);
 
     _tecs.update_pitch_throttle(current_time, follower_status.rotmat, follower_status.pitch_angle,
                                 follower_status.altitude, follower_setpoint.altitude, follower_setpoint.air_speed,
                                 follower_status.air_speed, params.EAS2TAS, params.climboutdem,
                                 params.climbout_pitch_min_rad, params.throttle_min, params.throttle_max,
                                 params.throttle_cruise, params.pitch_min_rad, params.pitch_max_rad);
-    
+
     struct TECS::tecs_state tecs_outputs;
 
-    _tecs.get_tecs_state(tecs_outputs);
+    _tecs.get_tecs_state(tecs_outputs); //这个是状态，可以作为调试的窗口用
 
-    follower_setpoint.pitch_angle = tecs_outputs.pitch_integ;
-    follower_setpoint.thrust = tecs_outputs.throttle_integ;
-
+    follower_setpoint.pitch_angle = _tecs.get_pitch_demand(); //添加负号保证
+    follower_setpoint.thrust = _tecs.get_throttle_demand();
 }
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 {
@@ -458,18 +499,24 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
             if (simulate_type == 1)
             {
-                follower_setpoint.mode = "OFFBOARD";
-                set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
+                for (int i = 1; i <= 10; i++) //做十次，防止收不到
+                {
+                    follower_setpoint.mode = "OFFBOARD";
+                    set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
+                }
             }
         }
 
-        show_fixed_wing_status(1);
-
         show_fixed_wing_status(2);
 
-        control_vertical(current_time);
+        //从机的期望值从这里开始被赋值
+        test(); //在这里面将期望高度，期望空速赋值
 
-        control_lateral(current_time);
+        control_vertical(current_time);//控制高度，空速
+
+        control_lateral(current_time);//控制水平位置（速度方向）
+
+        show_fixed_wing_setpoint(2);//打印从机期望值
 
         send_setpoint_to_px4(&fixed_wing_sub_pub);
 
