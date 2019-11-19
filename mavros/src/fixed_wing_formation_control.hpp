@@ -249,7 +249,15 @@ private:
 		float pitch_min_rad{-45};
 
 		float pitch_max_rad{45};
+
+		float speed_weight{1};
+
+		float time_const_throt{0};
 	} params;
+
+	string control_mode_prev;
+
+	string control_mode_current;
 
 public:
 	void
@@ -270,7 +278,7 @@ public:
 	bool update_leader_status();
 
 	void show_fixed_wing_status(int PlaneID);
-	
+
 	void show_fixed_wing_setpoint(int PlaneID);
 
 	void show_control_state(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);

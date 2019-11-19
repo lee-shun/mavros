@@ -257,9 +257,9 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
 
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
-    cout << "飞机当前姿态欧美系【pitch，roll，yaw】" << p->pitch_angle * 57.3 << " [deg] "
-         << p->roll_angle * 57.3 << " [deg] "
-         << p->yaw_angle * 57.3 << " [deg] " << endl;
+    cout << "飞机当前姿态欧美系【pitch，roll，yaw】" << p->pitch_angle << " [deg] "
+         << p->roll_angle << " [deg] "
+         << p->yaw_angle << " [deg] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
@@ -387,6 +387,7 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     //给结构体赋值；更新飞机状态
 
     follower_status.mode = fixed_wing_sub_pub_pointer->current_state.mode;
+
     //以下为GPS信息
     follower_status.altitude = fixed_wing_sub_pub_pointer->global_position_form_px4.altitude;
     follower_status.latitude = fixed_wing_sub_pub_pointer->global_position_form_px4.latitude;
@@ -451,11 +452,31 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
 
 void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 {
+    //不同模式切换的时候需要进行重置tecs
+    control_mode_current = follower_status.mode;
 
+    if (control_mode_current != control_mode_prev)
+    {
+        _tecs.reset_state();
+    }
+    //设置参数
+    _tecs.set_speed_weight(params.speed_weight);
+    _tecs.set_time_const_throt(params.time_const_throt);
     _tecs.enable_airspeed(true);
-    // _tecs.update_state(current_time, follower_status.altitude,
-    //                    follower_status.air_speed, follower_status.rotmat,
-    //                    follower_status.body_acc, follower_status.ned_acc, follower_status.altitude_lock, follower_status.in_air);
+
+    if (fabs(follower_setpoint.altitude - follower_status.altitude) >= 5) //判断一下是否要进入爬升
+
+    {
+        params.climboutdem = true;
+    }
+    else
+    {
+        params.climboutdem = false;
+    }
+
+    _tecs.update_state(current_time, follower_status.altitude,
+                       follower_status.air_speed, follower_status.rotmat,
+                       follower_status.body_acc, follower_status.ned_acc, follower_status.altitude_lock, follower_status.in_air);
 
     _tecs.update_pitch_throttle(current_time, follower_status.rotmat, follower_status.pitch_angle,
                                 follower_status.altitude, follower_setpoint.altitude, follower_setpoint.air_speed,
@@ -469,6 +490,8 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 
     follower_setpoint.pitch_angle = _tecs.get_pitch_demand(); //添加负号保证
     follower_setpoint.thrust = _tecs.get_throttle_demand();
+
+    control_mode_prev = control_mode_current;
 }
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 {
@@ -491,38 +514,40 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_leader_status();
 
-        if (simulate_type == 0 && follower_status.mode != "OFFBOARD")
+        if (follower_status.mode != "OFFBOARD")
         {
-
-            cout << "当前不是OFFBOARD，是否进行强制进入？强制请输入1，仅监视请输入2" << endl;
-            cin >> simulate_type;
-
-            if (simulate_type == 1)
-            {
-                for (int i = 1; i <= 10; i++) //做十次，防止收不到
-                {
-                    follower_setpoint.mode = "OFFBOARD";
-                    set_fixed_wing_mode(&fixed_wing_sub_pub, follower_setpoint.mode);
-                }
-            }
+            cout << "当前不是OFFBOARD,请用遥控器切换,不进行控制，监视模式" << endl;
+            cout << "|             |             |" << endl;
+            cout << "|             |             |" << endl;
+            cout << "|             |             |" << endl;
+            cout << "V             V             V" << endl;
+            show_fixed_wing_status(2);
         }
 
-        show_fixed_wing_status(2);
+        else
+        {
+            cout << "当前是OFFBOARD,进行编队控制，控制模式" << endl;
+            cout << "|             |             |" << endl;
+            cout << "|             |             |" << endl;
+            cout << "|             |             |" << endl;
+            cout << "V             V             V" << endl;
+            show_fixed_wing_status(2);
 
-        //从机的期望值从这里开始被赋值
-        test(); //在这里面将期望高度，期望空速赋值
+            //从机的期望值从这里开始被赋值
+            test(); //在这里面将期望高度，期望空速赋值
 
-        control_vertical(current_time);//控制高度，空速
+            control_vertical(current_time); //控制高度，空速
 
-        control_lateral(current_time);//控制水平位置（速度方向）
+            control_lateral(current_time); //控制水平位置（速度方向）
 
-        show_fixed_wing_setpoint(2);//打印从机期望值
+            show_fixed_wing_setpoint(2); //打印从机期望值
 
-        send_setpoint_to_px4(&fixed_wing_sub_pub);
+            send_setpoint_to_px4(&fixed_wing_sub_pub);
 
-        control_formation();
+            control_formation();
 
-        send_setpoint_to_ground_station();
+            send_setpoint_to_ground_station();
+        }
 
         ros::spinOnce(); //挂起一段时间，保证周期的速度
 
