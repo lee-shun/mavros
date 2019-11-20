@@ -178,15 +178,29 @@ void _FIXED_WING_FORMATION_CONTROL::control_formation()
 {
     //
 }
+void _FIXED_WING_FORMATION_CONTROL::trans_the_sp_for_send()
+{
+    //在这里要进行中间转换，欧美系的期望值存储在follower_setpoint，转换后的存在sp_to_send中
+    sp_to_send.roll_angle = follower_setpoint.roll_angle;
+    
+    if (-follower_setpoint.yaw_angle + deg_2_rad(90.0) < 0)
+        sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0);
+    else
+        sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0) + deg_2_rad(360.0);
 
+    sp_to_send.pitch_angle = -follower_setpoint.pitch_angle;
+
+    sp_to_send.thrust = follower_setpoint.thrust;
+}
 void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
+    trans_the_sp_for_send(); //将期望值转换一下坐标系
 
     float angle[3], quat[4];
 
-    angle[0] = follower_setpoint.roll_angle;
-    angle[1] = follower_setpoint.pitch_angle;
-    angle[2] = follower_setpoint.yaw_angle;
+    angle[0] = sp_to_send.roll_angle;
+    angle[1] = sp_to_send.pitch_angle;
+    angle[2] = sp_to_send.yaw_angle;
 
     euler_2_quaternion(angle, quat);
 
@@ -195,14 +209,14 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fi
     fixed_wing_sub_pub_pointer->att_sp.orientation.x = quat[1];
     fixed_wing_sub_pub_pointer->att_sp.orientation.y = quat[2];
     fixed_wing_sub_pub_pointer->att_sp.orientation.z = quat[3];
-    fixed_wing_sub_pub_pointer->att_sp.thrust = follower_setpoint.thrust;
+    fixed_wing_sub_pub_pointer->att_sp.thrust = sp_to_send.thrust;
 
     fixed_wing_local_att_sp_pub.publish(fixed_wing_sub_pub_pointer->att_sp);
 
     fixed_wing_sub_pub_pointer->att_sp_Euler[0] = angle[0];
     fixed_wing_sub_pub_pointer->att_sp_Euler[1] = angle[1];
     fixed_wing_sub_pub_pointer->att_sp_Euler[2] = angle[2];
-    fixed_wing_sub_pub_pointer->thrust_sp = follower_setpoint.thrust;
+    fixed_wing_sub_pub_pointer->thrust_sp = sp_to_send.thrust;
 
     //show_control_state(fixed_wing_sub_pub_pointer);
 }
@@ -218,8 +232,7 @@ void _FIXED_WING_FORMATION_CONTROL::test()
     //当前是屏蔽角速度控制的mavros
     follower_setpoint.roll_angle = 0.0;
 
-    follower_setpoint.yaw_angle = 1.5707;
-
+    follower_setpoint.yaw_angle = 0.0;
     //将期望高度和期望空速赋值
     follower_setpoint.air_speed = 18.5;
 
@@ -260,6 +273,12 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
     cout << "飞机当前姿态欧美系【roll，pitch，yaw】" << rad_2_deg(p->roll_angle) << " [deg] "
          << rad_2_deg(p->pitch_angle) << " [deg] "
          << rad_2_deg(p->yaw_angle) << " [deg] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
+    cout << "飞机当前姿态的旋转矩阵【第2行】" << p->rotmat[2][0] << " [] "
+         << p->rotmat[2][1] << " [] "
+         << p->rotmat[2][2] << " [] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
@@ -351,9 +370,9 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_setpoint(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
-    cout << "飞机四通道期望值【pitch，roll，yaw，thrust】" << p->pitch_angle * 57.3 << " [deg] "
-         << p->roll_angle * 57.3 << " [deg] "
-         << p->yaw_angle * 57.3 << " [deg] "
+    cout << "飞机姿态期望值【roll，pitch，yaw，thrust】" << p->roll_angle << " [rad] "
+         << p->pitch_angle << " [rad] "
+         << p->yaw_angle << " [rad] "
          << p->thrust << " [] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
@@ -393,14 +412,14 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.latitude = fixed_wing_sub_pub_pointer->global_position_form_px4.latitude;
     follower_status.longtitude = fixed_wing_sub_pub_pointer->global_position_form_px4.longitude;
 
-    //px4->mavros->node所以follower——status是在ned下的，
-    follower_status.global_vel_x = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.x;
-    follower_status.global_vel_y = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.y;
-    follower_status.global_vel_z = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.z;
+    //GPS速度是在ned下的，
+    follower_status.global_vel_x = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.y;
+    follower_status.global_vel_y = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.x;
+    follower_status.global_vel_z = -fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.z;
 
     follower_status.relative_alt = fixed_wing_sub_pub_pointer->global_rel_alt_from_px4.data;
 
-    //以下为机体系和地面系的夹角，地面系选东向为x，2019.11.11暂时理解
+    //以下为机体系和地面系的夹角，姿态角
     follower_status.roll_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[0];
     follower_status.pitch_angle = -fixed_wing_sub_pub_pointer->att_angle_Euler[1]; //添加负号转换到px4的系
 
@@ -413,22 +432,22 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     update_rotmat();
 
     //以下为ned坐标系
-    follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.x;
-    follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.y;
-    follower_status.ned_pos_z = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.z;
+    follower_status.ned_pos_x = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.y;
+    follower_status.ned_pos_y = fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.x;
+    follower_status.ned_pos_z = -fixed_wing_sub_pub_pointer->local_position_from_px4.pose.position.z;
 
-    follower_status.ned_vel_x = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.x;
-    follower_status.ned_vel_y = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.y;
-    follower_status.ned_vel_z = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
+    follower_status.ned_vel_x = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.y;
+    follower_status.ned_vel_y = fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.x;
+    follower_status.ned_vel_z = -fixed_wing_sub_pub_pointer->velocity_ned_fused_from_px4.twist.linear.z;
 
-    //以下为体轴系
+    //以下为体轴系//体轴系当中的加速度是对的
     follower_status.body_acc_x = fixed_wing_sub_pub_pointer->imu.linear_acceleration.x;
     follower_status.body_acc_y = fixed_wing_sub_pub_pointer->imu.linear_acceleration.y;
     follower_status.body_acc_z = fixed_wing_sub_pub_pointer->imu.linear_acceleration.z;
 
-    follower_status.body_acc[0] = fixed_wing_sub_pub_pointer->imu.linear_acceleration.x;
-    follower_status.body_acc[1] = fixed_wing_sub_pub_pointer->imu.linear_acceleration.y;
-    follower_status.body_acc[2] = fixed_wing_sub_pub_pointer->imu.linear_acceleration.z;
+    follower_status.body_acc[0] = follower_status.body_acc_x;
+    follower_status.body_acc[1] = follower_status.body_acc_y;
+    follower_status.body_acc[2] = follower_status.body_acc_z;
 
     //把体轴系下的加速度转到ned下
     matrix_plus_vector_3(follower_status.ned_acc, follower_status.rotmat, follower_status.body_acc);
@@ -446,9 +465,9 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.ground_speed = fixed_wing_sub_pub_pointer->air_ground_speed_from_px4.groundspeed;
 
     //write_to_files("/home/lee/airspeed", current_time, follower_status.air_speed);
-    follower_status.wind_estimate_x = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.x;
-    follower_status.wind_estimate_y = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.y;
-    follower_status.wind_estimate_z = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.z;
+    follower_status.wind_estimate_x = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.y;
+    follower_status.wind_estimate_y = fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.x;
+    follower_status.wind_estimate_z = -fixed_wing_sub_pub_pointer->wind_estimate_from_px4.twist.twist.linear.z;
 
     follower_status.battery_current = fixed_wing_sub_pub_pointer->battrey_state_from_px4.current;
     follower_status.battery_precentage = fixed_wing_sub_pub_pointer->battrey_state_from_px4.percentage;
@@ -493,7 +512,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 
     _tecs.get_tecs_state(tecs_outputs); //这个是状态，可以作为调试的窗口用
 
-    follower_setpoint.pitch_angle = _tecs.get_pitch_demand(); //添加负号保证
+    follower_setpoint.pitch_angle = _tecs.get_pitch_demand(); //添加负号保证,
     follower_setpoint.thrust = _tecs.get_throttle_demand();
 
     control_mode_prev = control_mode_current;

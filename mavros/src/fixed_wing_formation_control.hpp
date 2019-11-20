@@ -230,7 +230,7 @@ private:
 
 		float thrust{0};
 
-	} follower_setpoint, leader_setpoint;
+	} follower_setpoint, leader_setpoint,sp_to_send;
 
 	struct fixed_wing_params
 	{
@@ -296,6 +296,8 @@ public:
 	void send_message_to_sender();
 
 	void control_formation();
+
+	void trans_the_sp_for_send();
 
 	void send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
