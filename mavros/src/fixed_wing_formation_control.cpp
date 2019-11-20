@@ -182,7 +182,7 @@ void _FIXED_WING_FORMATION_CONTROL::trans_the_sp_for_send()
 {
     //在这里要进行中间转换，欧美系的期望值存储在follower_setpoint，转换后的存在sp_to_send中
     sp_to_send.roll_angle = follower_setpoint.roll_angle;
-    
+
     if (-follower_setpoint.yaw_angle + deg_2_rad(90.0) < 0)
         sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0);
     else
@@ -234,9 +234,9 @@ void _FIXED_WING_FORMATION_CONTROL::test()
 
     follower_setpoint.yaw_angle = 0.0;
     //将期望高度和期望空速赋值
-    follower_setpoint.air_speed = 18.5;
+    follower_setpoint.air_speed = 16.5;
 
-    follower_setpoint.altitude = 650;
+    follower_setpoint.altitude = 520;
 }
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
@@ -485,10 +485,10 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
     }
     //设置参数
     _tecs.set_speed_weight(params.speed_weight);
-    _tecs.set_time_const_throt(params.time_const_throt);
+    //_tecs.set_time_const_throt(params.time_const_throt);//这个还不清楚是什么。。。不要乱用
     _tecs.enable_airspeed(true);
 
-    if (fabs(follower_setpoint.altitude - follower_status.altitude) >= 5) //判断一下是否要进入爬升
+    if (follower_setpoint.altitude - follower_status.altitude >= 5) //判断一下是否要进入爬升
 
     {
         params.climboutdem = true;
