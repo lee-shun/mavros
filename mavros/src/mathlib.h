@@ -1,6 +1,8 @@
 #ifndef _MATHLIB_H_
 #define _MATHLIB_H_
 
+#define PI 3.1415926535
+
 float constrain(float val, float min, float max)
 {
     return (val < min) ? min : ((val > max) ? max : val);
@@ -77,6 +79,24 @@ void quat_2_rotmax(float q[4], float R[3][3])
     R[2][0] = 2.0f * (q[1] * q[3] - q[0] * q[2]);
     R[2][1] = 2.0f * (q[0] * q[1] + q[2] * q[3]);
     R[2][2] = aSq - bSq - cSq + dSq;
+}
+
+float rad_2_deg(float rad)
+{
+    float deg;
+
+    deg = rad * 180 / PI;
+
+    return deg;
+}
+
+float deg_2_rad(float deg)
+{
+    float rad;
+
+    rad = deg * PI / 180;
+
+    return rad;
 }
 
 #endif

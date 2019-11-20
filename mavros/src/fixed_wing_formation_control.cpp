@@ -257,9 +257,9 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_status(int PlaneID)
 
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
-    cout << "飞机当前姿态欧美系【pitch，roll，yaw】" << p->pitch_angle << " [deg] "
-         << p->roll_angle << " [deg] "
-         << p->yaw_angle << " [deg] " << endl;
+    cout << "飞机当前姿态欧美系【roll，pitch，yaw】" << rad_2_deg(p->roll_angle) << " [deg] "
+         << rad_2_deg(p->pitch_angle) << " [deg] "
+         << rad_2_deg(p->yaw_angle) << " [deg] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
@@ -386,13 +386,14 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
 
     //给结构体赋值；更新飞机状态
 
-    follower_status.mode = fixed_wing_sub_pub_pointer->current_state.mode;
+    follower_status.mode = fixed_wing_sub_pub_pointer->current_state.mode; //px4->mavros->node坐标没问题
 
-    //以下为GPS信息
+    //以下为GPS信息//px4->mavros->node坐标没问题
     follower_status.altitude = fixed_wing_sub_pub_pointer->global_position_form_px4.altitude;
     follower_status.latitude = fixed_wing_sub_pub_pointer->global_position_form_px4.latitude;
     follower_status.longtitude = fixed_wing_sub_pub_pointer->global_position_form_px4.longitude;
 
+    //px4->mavros->node所以follower——status是在ned下的，
     follower_status.global_vel_x = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.x;
     follower_status.global_vel_y = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.y;
     follower_status.global_vel_z = fixed_wing_sub_pub_pointer->velocity_global_fused_from_px4.twist.linear.z;
@@ -400,9 +401,13 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.relative_alt = fixed_wing_sub_pub_pointer->global_rel_alt_from_px4.data;
 
     //以下为机体系和地面系的夹角，地面系选东向为x，2019.11.11暂时理解
-    follower_status.roll_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[0];  //这里拿到的roll是对的，
-    follower_status.pitch_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[1]; //以欧美系建立机体坐标系，前向x，向下y，向左z
-    follower_status.yaw_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[2];   //东向为零，向北转动为正，
+    follower_status.roll_angle = fixed_wing_sub_pub_pointer->att_angle_Euler[0];
+    follower_status.pitch_angle = -fixed_wing_sub_pub_pointer->att_angle_Euler[1]; //添加负号转换到px4的系
+
+    if (-fixed_wing_sub_pub_pointer->att_angle_Euler[2] + deg_2_rad(90.0) > 0)
+        follower_status.yaw_angle = -fixed_wing_sub_pub_pointer->att_angle_Euler[2] + deg_2_rad(90.0); //添加符号使增加方向相同，而且领先于px490°
+    else
+        follower_status.yaw_angle = -fixed_wing_sub_pub_pointer->att_angle_Euler[2] + deg_2_rad(90.0) + deg_2_rad(360.0);
 
     //以下为旋转矩阵（ned和body）
     update_rotmat();
