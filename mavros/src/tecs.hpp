@@ -18,22 +18,22 @@ public:
              _update_speed_last_usec(0),
              _update_pitch_throttle_last_usec(0),
              // TECS tuning parameters
-             _hgtCompFiltOmega(0.0f),
-             _spdCompFiltOmega(0.0f),
-             _maxClimbRate(2.0f),
+             _hgtCompFiltOmega(3.0f),
+             _spdCompFiltOmega(2.0f),
+             _maxClimbRate(5.0f),
              _minSinkRate(1.0f),
              _maxSinkRate(2.0f),
              _timeConst(5.0f),
              _timeConstThrot(8.0f),
              _ptchDamp(0.0f),
-             _thrDamp(0.0f),
-             _integGain(0.0f),
-             _vertAccLim(0.0f),
-             _rollComp(0.0f),
+             _thrDamp(0.5f),
+             _integGain(0.1),
+             _vertAccLim(10.0f),
+             _rollComp(15.0f),//可能是那个转弯补偿
              _spdWeight(0.5f),
-             _heightrate_p(0.0f),
-             _heightrate_ff(0.0f),
-             _speedrate_p(0.0f),
+             _heightrate_p(0.05),
+             _heightrate_ff(0.8f),
+             _speedrate_p(0.02f),
              _throttle_dem(0.0f),
              _pitch_dem(0.0f),
              _integ1_state(0.0f),
@@ -568,6 +568,8 @@ void TECS::_initialise_states(float pitch, float throttle_cruise, float baro_alt
 	* 其中EAS为等效空速，TAS为实际空速，一般情况下，两者比例为1
 	*
 	***************************/
+    cout<<"_update_pitch_throttle_last_usec == 0"<<_update_pitch_throttle_last_usec<<endl;
+
     if (_update_pitch_throttle_last_usec == 0 || _DT > DT_MAX || !_in_air || !_states_initalized)
     {
         _integ1_state = 0.0f;
@@ -759,28 +761,32 @@ void TECS::_update_height_demand(float demand, float state)//state是当前的�
     // This is required because height demand is updated in steps
     //if (PX4_ISFINITE(demand))
     //{
-    _hgt_dem = 0.5f * (demand + _hgt_dem_in_old);
+    //_hgt_dem = 0.5f * (demand + _hgt_dem_in_old);
+    _hgt_dem = demand;
     //}
     // else
     // {
     //     _hgt_dem = _hgt_dem_in_old;
     // }
-     _hgt_dem_in_old = _hgt_dem;//将现在的期望高度记录一下，下一次用
+    //  _hgt_dem_in_old = _hgt_dem;//将现在的期望高度记录一下，下一次用
 
-    // Limit height demand
-    // this is important to avoid a windup
-    if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
-    {
-        _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
-    }
-    else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
-    {
-        _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
-    }
+    // // Limit height demand
+    // // this is important to avoid a windup
+    // if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
+    // {
+    //     _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
+    // }
+    // else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
+    // {
+    //     _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
+    // }
 
-    _hgt_dem_prev = _hgt_dem;
+    // _hgt_dem_prev = _hgt_dem;
+
+    cout<<"in the _update_height_demand" <<_hgt_dem<<endl;
 
     _hgt_dem_adj = 0.1f * _hgt_dem + 0.9f * _hgt_dem_adj_last;
+    _hgt_dem_adj = demand;
     _hgt_dem_adj_last = _hgt_dem_adj;
     _hgt_rate_dem = (_hgt_dem_adj - state) * _heightrate_p + _heightrate_ff * (_hgt_dem_adj - _hgt_dem_adj_last) / _DT;
 
@@ -890,12 +896,12 @@ void TECS::_update_throttle(float throttle_cruise, const float rotMat[3][3])
         if (airspeed_sensor_enabled())
         {
             _throttle_dem = _throttle_dem + _integ6_state;
-                    cout<<"_throttle_dem:if"<<double(_throttle_dem)<<endl;
+            
         }
         else
         {
             _throttle_dem = ff_throttle;
-                    cout<<"_throttle_dem:esle"<<double(_throttle_dem)<<endl;
+              
         }
 
         // 保护
@@ -991,6 +997,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
                                  float EAS_dem, float indicated_airspeed, float EAS2TAS, bool climbOutDem, float ptchMinCO,
                                  float throttle_min, float throttle_max, float throttle_cruise, float pitch_limit_min, float pitch_limit_max)
 {
+    //cout<<"very_first" <<_hgt_dem<<endl;
     // Calculate time in seconds since last update
     float now = time_now;
     _DT = max((now - _update_pitch_throttle_last_usec), 0) * 1.0e-6f;
@@ -1011,7 +1018,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
 	* _integ7_state <---- pitch的积分量；
 	***************************/
     _initialise_states(pitch, throttle_cruise, baro_altitude, ptchMinCO, EAS2TAS);
-
+    
     /**************************
 	*
 	* 1. 计算当前的空速，对测量到的空速做一个二阶的低通滤波
@@ -1019,7 +1026,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
 	*
 	***************************/
     _update_speed(time_now, EAS_dem, indicated_airspeed, _indicated_airspeed_min, _indicated_airspeed_max, EAS2TAS);
-
+    //cout<<"_initialise_states" <<_hgt_dem<<endl;
     // /**************************
     // *
     // * 2. 计算动能的极值，当爬升速度最大或最小的时候，取到动能的极值

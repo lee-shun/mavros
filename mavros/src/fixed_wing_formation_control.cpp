@@ -234,9 +234,9 @@ void _FIXED_WING_FORMATION_CONTROL::test()
 
     follower_setpoint.yaw_angle = 0.0;
     //将期望高度和期望空速赋值
-    follower_setpoint.air_speed = 16.5;
+    follower_setpoint.air_speed = 18.5;
 
-    follower_setpoint.altitude = 520;
+    follower_setpoint.altitude = 580.0;
 }
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
@@ -485,18 +485,18 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
     }
     //设置参数
     _tecs.set_speed_weight(params.speed_weight);
-    //_tecs.set_time_const_throt(params.time_const_throt);//这个还不清楚是什么。。。不要乱用
+    _tecs.set_time_const_throt(params.time_const_throt); //这个还不清楚是什么。。。不要乱用默认是8
     _tecs.enable_airspeed(true);
 
-    if (follower_setpoint.altitude - follower_status.altitude >= 5) //判断一下是否要进入爬升
+    // if (follower_setpoint.altitude - follower_status.altitude >= 5) //判断一下是否要进入爬升
 
-    {
-        params.climboutdem = true;
-    }
-    else
-    {
-        params.climboutdem = false;
-    }
+    // {
+    //     params.climboutdem = true;
+    // }
+    // else
+    // {
+    params.climboutdem = false;
+    // }
 
     _tecs.update_state(current_time, follower_status.altitude,
                        follower_status.air_speed, follower_status.rotmat,
@@ -508,8 +508,6 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
                                 params.climbout_pitch_min_rad, params.throttle_min, params.throttle_max,
                                 params.throttle_cruise, params.pitch_min_rad, params.pitch_max_rad);
 
-    struct TECS::tecs_state tecs_outputs;
-
     _tecs.get_tecs_state(tecs_outputs); //这个是状态，可以作为调试的窗口用
 
     follower_setpoint.pitch_angle = _tecs.get_pitch_demand(); //添加负号保证,
@@ -517,6 +515,46 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 
     control_mode_prev = control_mode_current;
 }
+
+void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
+{
+    cout << "&&&&&&&&&&&&&&&&&&&以下是tecs控制器的状态打印#####################" << endl;
+
+    cout << "airspeed_filtered"
+         << "=" << tecs_outputs.airspeed_filtered << endl;
+    cout << "airspeed_rate"
+         << "=" << tecs_outputs.airspeed_rate << endl;
+    cout << "airspeed_sp"
+         << "=" << tecs_outputs.airspeed_sp << endl;
+    cout << "altitude_filtered"
+         << "=" << tecs_outputs.altitude_filtered << endl;
+    cout << "altitude_rate"
+         << "=" << tecs_outputs.altitude_rate << endl;
+    cout << "altitude_rate_sp"
+         << "=" << tecs_outputs.altitude_rate_sp << endl;
+    cout << "altitude_sp"
+         << "=" << tecs_outputs.altitude_sp << endl;
+    cout << "pitch_integ"
+         << "=" << tecs_outputs.pitch_integ << endl;
+    cout << "throttle_integ"
+         << "=" << tecs_outputs.throttle_integ << endl;
+    cout << "total_energy_error"
+         << "=" << tecs_outputs.total_energy_error << endl;
+    cout << "total_energy_rate_error"
+         << "=" << tecs_outputs.total_energy_rate_error << endl;
+    cout << "energy_distribution_error"
+         << "=" << tecs_outputs.energy_distribution_error << endl;
+    cout << "energy_distribution_error_integ"
+         << "=" << tecs_outputs.energy_distribution_error_integ << endl;
+    cout << "energy_distribution_rate_error"
+         << "=" << tecs_outputs.energy_distribution_rate_error << endl;
+    cout << "energy_error_integ"
+         << "=" << tecs_outputs.energy_error_integ<< endl;
+
+
+    cout << "&&&&&&&&&&&&&&&&&&&以上是tecs控制器的状态打印#####################" << endl;
+}
+
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 {
     //
@@ -526,7 +564,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 {
 
     ros::Rate rate(10.0);
-    ros::Time begin_time = ros::Time::now(); // 记录启控时间
+    begin_time = ros::Time::now(); // 记录启控时间
 
     ros_sub_and_pub(&fixed_wing_sub_pub);
 
@@ -563,6 +601,8 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             control_vertical(current_time); //控制高度，空速
 
             control_lateral(current_time); //控制水平位置（速度方向）
+
+            show_tecs_status();
 
             show_fixed_wing_setpoint(2); //打印从机期望值
 

@@ -22,11 +22,15 @@ class _FIXED_WING_FORMATION_CONTROL
 {
 
 private:
+	ros::Time begin_time;
+
 	int simulate_type{0};
 
 	_FIXED_WING_SUB_PUB fixed_wing_sub_pub;
 
 	TECS _tecs;
+
+	struct TECS::tecs_state tecs_outputs;
 
 	float current_time;
 
@@ -230,7 +234,7 @@ private:
 
 		float thrust{0};
 
-	} follower_setpoint, leader_setpoint,sp_to_send;
+	} follower_setpoint, leader_setpoint, sp_to_send;
 
 	struct fixed_wing_params
 	{
@@ -252,7 +256,7 @@ private:
 
 		float speed_weight{1};
 
-		float time_const_throt{0};
+		float time_const_throt{8.0};
 	} params;
 
 	string control_mode_prev;
@@ -260,8 +264,7 @@ private:
 	string control_mode_current;
 
 public:
-	void
-	write_to_files(string file_path_name, float time_stamp, float data);
+	void write_to_files(string file_path_name, float time_stamp, float data);
 
 	float get_ros_time(ros::Time begin); //获取ros当前时间
 
@@ -304,6 +307,9 @@ public:
 	void send_setpoint_to_ground_station();
 
 	void control_vertical(float current_time);
+
+	void show_tecs_status();
+
 	void control_lateral(float current_time);
 };
 
