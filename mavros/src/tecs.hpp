@@ -761,32 +761,32 @@ void TECS::_update_height_demand(float demand, float state)//state是当前的�
     // This is required because height demand is updated in steps
     //if (PX4_ISFINITE(demand))
     //{
-    //_hgt_dem = 0.5f * (demand + _hgt_dem_in_old);
-    _hgt_dem = demand;
-    //}
+    _hgt_dem = 0.5f * (demand + _hgt_dem_in_old);
+    //_hgt_dem = demand;
+    // }
     // else
     // {
     //     _hgt_dem = _hgt_dem_in_old;
     // }
-    //  _hgt_dem_in_old = _hgt_dem;//将现在的期望高度记录一下，下一次用
+     _hgt_dem_in_old = _hgt_dem;//将现在的期望高度记录一下，下一次用
 
-    // // Limit height demand
-    // // this is important to avoid a windup
-    // if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
-    // {
-    //     _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
-    // }
-    // else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
-    // {
-    //     _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
-    // }
+    // Limit height demand
+    // this is important to avoid a windup
+    if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
+    {
+        _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
+    }
+    else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
+    {
+        _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
+    }
 
-    // _hgt_dem_prev = _hgt_dem;
+    _hgt_dem_prev = _hgt_dem;
 
     cout<<"in the _update_height_demand" <<_hgt_dem<<endl;
 
     _hgt_dem_adj = 0.1f * _hgt_dem + 0.9f * _hgt_dem_adj_last;
-    _hgt_dem_adj = demand;
+    //_hgt_dem_adj = demand;
     _hgt_dem_adj_last = _hgt_dem_adj;
     _hgt_rate_dem = (_hgt_dem_adj - state) * _heightrate_p + _heightrate_ff * (_hgt_dem_adj - _hgt_dem_adj_last) / _DT;
 
