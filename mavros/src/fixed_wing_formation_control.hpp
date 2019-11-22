@@ -26,6 +26,8 @@ private:
 
 	int simulate_type{0};
 
+	int formation_type;
+
 	_FIXED_WING_SUB_PUB fixed_wing_sub_pub;
 
 	TECS _tecs;
@@ -236,7 +238,7 @@ private:
 
 	} follower_setpoint, leader_setpoint, sp_to_send;
 
-	struct fixed_wing_params
+	struct _s_fixed_wing_params
 	{
 		int EAS2TAS{1};
 
@@ -260,6 +262,38 @@ private:
 
 		float time_const{5.0};
 	} params;
+
+	struct _s_error_between_leader_followern
+	{
+		float latitude{0};
+
+		float altitude{0};
+
+		float longtitude{0};
+
+		float airspeed{0};
+
+		float groundspeed{0};
+
+		float distance_level{0};
+
+		float distance_vertical{0};
+
+		float distance_3d{0};
+
+	} error_leader_follwer1;
+
+	struct _s_formation_params
+	{
+		float v_kp{0};
+
+		float altitude_offset{0};
+
+		float longtitude_offset{0};
+
+		float latitude_offset{0};
+
+	} formation_params;
 
 	string control_mode_prev;
 
@@ -307,6 +341,12 @@ public:
 	void send_setpoint_to_px4(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
 	void send_setpoint_to_ground_station();
+
+	void calculate_the_distance_error();
+
+	void foramtion_demands_update(int formation_type);
+
+	void calculate_the_desire_airspeed();
 
 	void control_vertical(float current_time);
 

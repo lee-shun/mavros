@@ -474,6 +474,57 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
     follower_status.battery_voltage = fixed_wing_sub_pub_pointer->battrey_state_from_px4.voltage;
 }
 
+void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
+{
+    cout << "当前队形--->" << formation_type << endl;
+
+    switch (formation_type)
+    {
+    case 1: //一对一，前后为10m，左右为0.1m
+
+        break;
+
+    case 2:
+
+        break;
+    };
+
+    follower_setpoint.altitude = leader_status.altitude + formation_params.altitude_offset;
+
+    follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_leader_follwer1.distance_3d;
+
+    follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_leader_follwer1.distance_3d;
+
+    follower_setpoint.latitude = leader_status.latitude + formation_params.latitude_offset;
+
+    follower_setpoint.longtitude = leader_status.longtitude + formation_params.longtitude_offset;
+}
+
+void _FIXED_WING_FORMATION_CONTROL::calculate_the_distance_error()
+{
+    float follwer_pos[2];
+    float leader_pos[2];
+
+    follwer_pos[0] = follower_status.latitude;
+    follwer_pos[1] = follower_status.longtitude;
+    leader_pos[0] = leader_status.latitude;
+    leader_pos[1] = leader_status.longtitude;
+
+    error_leader_follwer1.altitude = leader_status.altitude - follower_status.altitude;
+
+    error_leader_follwer1.distance_level = cov_lat_long_2_m(follwer_pos, leader_pos);
+
+    error_leader_follwer1.distance_3d = sqrt(error_leader_follwer1.altitude * error_leader_follwer1.altitude +
+                                             error_leader_follwer1.distance_level * error_leader_follwer1.distance_level);
+}
+
+void _FIXED_WING_FORMATION_CONTROL::calculate_the_desire_airspeed()
+{
+    //TECS控制的是空速，编队控制是地速，因而用风估计将期望地速转换成期望空速，注意正负号
+    follower_setpoint.air_speed = sqrt((follower_setpoint.ned_vel_x - follower_status.wind_estimate_x) * (follower_setpoint.ned_vel_x - follower_status.wind_estimate_x) +
+                                       (follower_setpoint.ned_vel_y - follower_status.wind_estimate_y) * (follower_setpoint.ned_vel_y - follower_status.wind_estimate_y));
+}
+
 void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 {
     //不同模式切换的时候需要进行重置tecs
@@ -501,6 +552,8 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
     {
         params.climboutdem = false;
     }
+
+    calculate_the_desire_airspeed();
 
     _tecs.update_state(current_time, follower_status.altitude,
                        follower_status.air_speed, follower_status.rotmat,
@@ -571,7 +624,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 {
 
-    ros::Rate rate(100.0);
+    ros::Rate rate(60.0);
     begin_time = ros::Time::now(); // 记录启控时间
 
     ros_sub_and_pub(&fixed_wing_sub_pub);
@@ -604,7 +657,11 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             show_fixed_wing_status(2);
 
             //从机的期望值从这里开始被赋值
-            test(); //在这里面将期望高度，期望空速赋值
+            //test(); //在这里面将期望高度，期望空速赋值
+
+            calculate_the_distance_error();
+
+            foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
 
             control_vertical(current_time); //控制高度，空速
 

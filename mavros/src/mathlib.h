@@ -1,7 +1,9 @@
 #ifndef _MATHLIB_H_
 #define _MATHLIB_H_
-
+#include <math.h>
 #define PI 3.1415926535
+#define CONSTANTS_RADIUS_OF_EARTH 6371000
+#define EARTH_RADIUS 6378137
 
 float constrain(float val, float min, float max)
 {
@@ -97,6 +99,52 @@ float deg_2_rad(float deg)
     rad = deg * PI / 180;
 
     return rad;
+}
+
+//ref,result---lat,long,alt
+void cov_m_2_lat_long_alt(const float ref[3], float x, float y, float z, float result[3])
+{
+    const double x_rad = (double)x / CONSTANTS_RADIUS_OF_EARTH;
+    const double y_rad = (double)y / CONSTANTS_RADIUS_OF_EARTH;
+    const double c = sqrt(x_rad * x_rad + y_rad * y_rad);
+
+    if (fabs(c) > 0)
+    {
+        const double sin_c = sin(c);
+        const double cos_c = cos(c);
+
+        const double lat_rad = asin(cos_c * sin(ref[0]) + (x_rad * sin_c * cos(ref[0])) / c);
+        const double lon_rad = (deg_2_rad(ref[1]) + atan2(y_rad * sin_c, c * cos(ref[0]) * cos_c - x_rad * sin(ref[0]) * sin_c));
+
+        result[0] = rad_2_deg(lat_rad); //ref,result---lat,long,alt
+        result[1] = rad_2_deg(lon_rad);
+    }
+    else
+    {
+        result[0] = rad_2_deg(ref[0]);
+        result[1] = rad_2_deg(ref[1]);
+    }
+
+    result[2] = ref[2] + z; //高度
+}
+
+double cov_lat_long_2_m(float a_pos[2], float b_pos[2])
+{ //参考点是a点，lat，long，alt
+    double lat1 = a_pos[0];
+    double lon1 = a_pos[1];
+
+    double lat2 = b_pos[0];
+    double lon2 = b_pos[1];
+
+    double radLat1 = deg_2_rad(lat1);
+    double radLat2 = deg_2_rad(lat2);
+    double a = radLat1 - radLat2;
+    double b = deg_2_rad(lon1) - deg_2_rad(lon2);
+    double s = 2 * asin(sqrt(pow(sin(a / 2), 2) + cos(radLat1) * cos(radLat2) * pow(sin(b / 2), 2)));
+    double m;
+    m = s * EARTH_RADIUS;
+
+    return m;
 }
 
 #endif
