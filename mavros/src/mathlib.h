@@ -136,14 +136,16 @@ double cov_lat_long_2_m(float a_pos[2], float b_pos[2])
     double lat2 = b_pos[0];
     double lon2 = b_pos[1];
 
-    double radLat1 = deg_2_rad(lat1);
-    double radLat2 = deg_2_rad(lat2);
-    double a = radLat1 - radLat2;
-    double b = deg_2_rad(lon1) - deg_2_rad(lon2);
-    double s = 2 * asin(sqrt(pow(sin(a / 2), 2) + cos(radLat1) * cos(radLat2) * pow(sin(b / 2), 2)));
-    double m;
-    m = s * EARTH_RADIUS;
 
+
+    double n_distance = deg_2_rad(lat2 - lat1) * EARTH_RADIUS;
+    double r_at_ref1 = cos(lat1) * EARTH_RADIUS;
+
+    double e_distance = deg_2_rad(lon2-lon1)*r_at_ref1;
+    double m[2];
+
+    m[0]=n_distance;
+    m[1]=e_distance;
     return m;
 }
 

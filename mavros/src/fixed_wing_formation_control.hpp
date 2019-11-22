@@ -228,6 +228,12 @@ private:
 
 		float ned_acc_z{0};
 
+		float body_acc_x{0};
+
+		float body_acc_y{0};
+
+		float boday_acc_z{0};
+
 		float pitch_angle{0};
 
 		float yaw_angle{0};
@@ -271,6 +277,10 @@ private:
 
 		float longtitude{0};
 
+		float n_diatance{0};
+
+		float e_distance{0};
+
 		float airspeed{0};
 
 		float groundspeed{0};
@@ -280,6 +290,10 @@ private:
 		float distance_vertical{0};
 
 		float distance_3d{0};
+
+		float ned_vel_x{0};
+
+		float ned_vel_y{0};
 
 	} error_follwer1;
 
@@ -298,6 +312,12 @@ private:
 	string control_mode_prev;
 
 	string control_mode_current;
+
+	struct _s_control_lateral_params
+	{
+		float kp{0};
+		float kd{0};
+	} control_lateral_params;
 
 public:
 	void write_to_files(string file_path_name, float time_stamp, float data);
@@ -342,7 +362,7 @@ public:
 
 	void send_setpoint_to_ground_station();
 
-	void calculate_the_distance_error();
+	void calculate_error();
 
 	void foramtion_demands_update(int formation_type);
 

@@ -495,14 +495,14 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     follower_setpoint.longtitude = leader_status.longtitude + formation_params.longtitude_offset;
 
-    calculate_the_distance_error();//计算一下距离error，得到地速期望
+    calculate_error(); //计算一下距离error，得到地速期望,以及ned速度误差
 
     follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_follwer1.distance_3d;
 
     follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_follwer1.distance_3d;
 }
 
-void _FIXED_WING_FORMATION_CONTROL::calculate_the_distance_error()
+void _FIXED_WING_FORMATION_CONTROL::calculate_error()
 {
     float follwer_pos[2];
     float follower_sp_pos[2];
@@ -514,10 +514,18 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_the_distance_error()
 
     error_follwer1.altitude = follower_setpoint.altitude - follower_status.altitude;
 
-    error_follwer1.distance_level = cov_lat_long_2_m(follwer_pos, follower_sp_pos);
+    double m[2] = = cov_lat_long_2_m(follwer_pos, follower_sp_pos);
+
+    error_follwer1.n_diatance = m[0]; //机载ned
+    error_follwer1.e_distance = m[1];
+
+    error_follwer1.distance_level = sqrt(m[0] * m[0] + m[1] * m[1]);
 
     error_follwer1.distance_3d = sqrt(error_follwer1.altitude * error_follwer1.altitude +
                                       error_follwer1.distance_level * error_follwer1.distance_level);
+
+    error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_setpoint.ned_vel_x;
+    error_follwer1.ned_vel_y = leader_status.ned_vel_y - follower_setpoint.ned_vel_y;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_the_desire_airspeed()
@@ -621,6 +629,24 @@ void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 {
     //
+    float delat_a_n = -control_lateral_params.kp * error_follwer1.n_diatance - control_lateral_params.kd * error_follwer1.ned_vel_x;
+    float delat_a_e = -control_lateral_params.kp * error_follwer1.e_distance - control_lateral_params.kd * error_follwer1.ned_vel_y;
+
+    follower_setpoint.ned_acc_x = delat_a_n + leader_status.ned_acc_x;
+    follower_setpoint.ned_acc_y = delat_a_e + leader_status.ned_acc_y;
+
+//将ned下的加速度期望值转换到体轴系下
+    follower_setpoint.body_acc_x = cos(follower_status.yaw_angle) * follower_setpoint.ned_acc_x +
+                                   sin(follower_status.yaw_angle) * follower_setpoint.ned_acc_y;
+
+    follower_setpoint.body_acc_y = -sin(follower_status.yaw_angle) * follower_setpoint.ned_acc_x +
+                                   cos(follower_status.yaw_angle) * follower_setpoint.ned_acc_y;
+
+
+    //去掉x方向的加速度，利用协调转弯，计算滚转角期望值
+
+    follower_setpoint.roll_angle = atan(follower_setpoint.body_acc_y/CONSTANTS_ONE_G);
+
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
