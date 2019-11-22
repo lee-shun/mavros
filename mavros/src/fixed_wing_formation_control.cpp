@@ -491,31 +491,33 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     follower_setpoint.altitude = leader_status.altitude + formation_params.altitude_offset;
 
-    follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_leader_follwer1.distance_3d;
-
-    follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_leader_follwer1.distance_3d;
-
     follower_setpoint.latitude = leader_status.latitude + formation_params.latitude_offset;
 
     follower_setpoint.longtitude = leader_status.longtitude + formation_params.longtitude_offset;
+
+    calculate_the_distance_error();//计算一下距离error，得到地速期望
+
+    follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_follwer1.distance_3d;
+
+    follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_follwer1.distance_3d;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_the_distance_error()
 {
     float follwer_pos[2];
-    float leader_pos[2];
+    float follower_sp_pos[2];
 
     follwer_pos[0] = follower_status.latitude;
     follwer_pos[1] = follower_status.longtitude;
-    leader_pos[0] = leader_status.latitude;
-    leader_pos[1] = leader_status.longtitude;
+    follower_sp_pos[0] = follower_setpoint.latitude;
+    follower_sp_pos[1] = follower_setpoint.longtitude;
 
-    error_leader_follwer1.altitude = leader_status.altitude - follower_status.altitude;
+    error_follwer1.altitude = follower_setpoint.altitude - follower_status.altitude;
 
-    error_leader_follwer1.distance_level = cov_lat_long_2_m(follwer_pos, leader_pos);
+    error_follwer1.distance_level = cov_lat_long_2_m(follwer_pos, follower_sp_pos);
 
-    error_leader_follwer1.distance_3d = sqrt(error_leader_follwer1.altitude * error_leader_follwer1.altitude +
-                                             error_leader_follwer1.distance_level * error_leader_follwer1.distance_level);
+    error_follwer1.distance_3d = sqrt(error_follwer1.altitude * error_follwer1.altitude +
+                                      error_follwer1.distance_level * error_follwer1.distance_level);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_the_desire_airspeed()
@@ -658,8 +660,6 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
             //从机的期望值从这里开始被赋值
             //test(); //在这里面将期望高度，期望空速赋值
-
-            calculate_the_distance_error();
 
             foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
 

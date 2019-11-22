@@ -263,7 +263,7 @@ private:
 		float time_const{5.0};
 	} params;
 
-	struct _s_error_between_leader_followern
+	struct _s_error_followern
 	{
 		float latitude{0};
 
@@ -281,7 +281,7 @@ private:
 
 		float distance_3d{0};
 
-	} error_leader_follwer1;
+	} error_follwer1;
 
 	struct _s_formation_params
 	{
