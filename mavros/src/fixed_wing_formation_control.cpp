@@ -479,24 +479,28 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
     //不同模式切换的时候需要进行重置tecs
     control_mode_current = follower_status.mode;
 
+    //从领机状态获得飞机的期望高度与期望空速
+
     if (control_mode_current != control_mode_prev)
     {
         _tecs.reset_state();
     }
-    //设置参数
+
+    //设置参数,真实的飞机还需要另外调参
     _tecs.set_speed_weight(params.speed_weight);
-    _tecs.set_time_const_throt(params.time_const_throt); //这个还不清楚是什么。。。不要乱用默认是8
+    _tecs.set_time_const_throt(params.time_const_throt); //这个值影响到总能量-》油门的（相当于Kp，他越大，kp越小）
+    _tecs.set_time_const(params.time_const);             //这个值影响到能量分配-》俯仰角他越大，kp越小
     _tecs.enable_airspeed(true);
 
-    // if (follower_setpoint.altitude - follower_status.altitude >= 5) //判断一下是否要进入爬升
+    if (follower_setpoint.altitude - follower_status.altitude >= 5) //判断一下是否要进入爬升
 
-    // {
-    //     params.climboutdem = true;
-    // }
-    // else
-    // {
-    params.climboutdem = false;
-    // }
+    {
+        params.climboutdem = true;
+    }
+    else
+    {
+        params.climboutdem = false;
+    }
 
     _tecs.update_state(current_time, follower_status.altitude,
                        follower_status.air_speed, follower_status.rotmat,
@@ -518,9 +522,11 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 
 void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
 {
+    for (int i = 1; i <= the_space_between_blocks; i++)
+        cout << endl;
     cout << "&&&&&&&&&&&&&&&&&&&以下是tecs控制器的状态打印#####################" << endl;
 
-    cout<<"mode"<<tecs_outputs.mode<<endl;
+    cout << "mode" << tecs_outputs.mode << endl;
     cout << "airspeed_filtered"
          << "=" << tecs_outputs.airspeed_filtered << endl;
     cout << "airspeed_rate"
@@ -550,10 +556,11 @@ void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
     cout << "energy_distribution_rate_error"
          << "=" << tecs_outputs.energy_distribution_rate_error << endl;
     cout << "energy_error_integ"
-         << "=" << tecs_outputs.energy_error_integ<< endl;
-
+         << "=" << tecs_outputs.energy_error_integ << endl;
 
     cout << "&&&&&&&&&&&&&&&&&&&以上是tecs控制器的状态打印#####################" << endl;
+    for (int i = 1; i <= the_space_between_blocks; i++)
+        cout << endl;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)

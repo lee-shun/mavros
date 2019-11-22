@@ -468,7 +468,7 @@ void TECS::update_state(float time_now, float baro_altitude, float airspeed, con
 {
     /// Calculate time in seconds since last update
     uint64_t now = time_now;
-    float DT = max((now - _update_50hz_last_usec), 0) * 1.0e-6f;
+    float DT = max((now - _update_50hz_last_usec), 0);
 
     bool reset_altitude = false;
 
@@ -568,11 +568,9 @@ void TECS::_initialise_states(float pitch, float throttle_cruise, float baro_alt
 	* 其中EAS为等效空速，TAS为实际空速，一般情况下，两者比例为1
 	*
 	***************************/
-    cout << "_update_pitch_throttle_last_usec == 0" << _update_pitch_throttle_last_usec << endl;
-
     if (_update_pitch_throttle_last_usec == 0)
     {
-        cout << "hhhhh" << endl;
+
         _integ1_state = 0.0f;
         _integ2_state = 0.0f;
         _integ3_state = baro_altitude;
@@ -771,20 +769,18 @@ void TECS::_update_height_demand(float demand, float state) //state是当前的�
     // }
     _hgt_dem_in_old = _hgt_dem; //将现在的期望高度记录一下，下一次用
 
-    // Limit height demand
-    // this is important to avoid a windup
-    // if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
-    // {
-    //     _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
-    // }
-    // else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
-    // {
-    //     _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
-    // }
+    //Limit height demand
+    //this is important to avoid a windup
+    if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
+    {
+        _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
+    }
+    else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
+    {
+        _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
+    }
 
     _hgt_dem_prev = _hgt_dem;
-
-    cout << "in the _update_height_demand" << _hgt_dem << endl;
 
     _hgt_dem_adj = 0.1f * _hgt_dem + 0.9f * _hgt_dem_adj_last;
     //_hgt_dem_adj = demand;
@@ -812,7 +808,7 @@ void TECS::_update_energies()
     _SPEdot_dem = _hgt_rate_dem * CONSTANTS_ONE_G;
     _SKEdot_dem = _integ5_state * _TAS_rate_dem;
 
-    // Calculate specific energy 后缀est是什么意思？？？？？？
+    // Calculate specific energy
     _SPE_est = _integ3_state * CONSTANTS_ONE_G;
     _SKE_est = 0.5f * _integ5_state * _integ5_state;
 
@@ -823,11 +819,6 @@ void TECS::_update_energies()
 
 void TECS::_update_throttle(float throttle_cruise, const float rotMat[3][3])
 {
-    // 计算总能量的error
-    cout<<"_SPE_dem"<<_SPE_dem<<endl;
-    cout<<"_SPE_est"<<_SPE_est<<endl;
-    cout<<"_SKE_dem"<<_SKE_dem<<endl;
-    cout<<"_SKE_est"<<_SKE_est<<endl;
 
     _STE_error = _SPE_dem - _SPE_est + _SKE_dem - _SKE_est;
     float STEdot_dem = constrain((_SPEdot_dem + _SKEdot_dem), _STEdot_min, _STEdot_max);
@@ -978,26 +969,20 @@ void TECS::_update_pitch()
     // 将PD+ff控制的第二步，将能量转化率的error转换到期望的俯仰角
     _pitch_dem_unc = (SEB_correction + _integ7_state) / gainInv;
 
-    // cout<<"能量分配误差"<<SEB_correction<<endl;
-    // cout<<"_integ7_state"<<_integ7_state<<endl;
-    // cout<<"_pitch_dem_unc"<<_pitch_dem_unc<<endl;
-    
-
     // Constrain pitch demand
     _pitch_dem = constrain(_pitch_dem_unc, _PITCHminf, _PITCHmaxf);
 
+    // 对pitch的角速度做限制，不会超出_vertAccLim、、这个地方有问题，限制住了demand
+    float ptchRateIncr = _DT * _vertAccLim / _integ5_state;
 
-    // // 对pitch的角速度做限制，不会超出_vertAccLim、、这个地方有问题，限制住了demand
-    // float ptchRateIncr = _DT * _vertAccLim / _integ5_state;
-
-    // if ((_pitch_dem - _last_pitch_dem) > ptchRateIncr)
-    // {
-    //     _pitch_dem = _last_pitch_dem + ptchRateIncr;
-    // }
-    // else if ((_pitch_dem - _last_pitch_dem) < -ptchRateIncr)
-    // {
-    //     _pitch_dem = _last_pitch_dem - ptchRateIncr;
-    // }
+    if ((_pitch_dem - _last_pitch_dem) > ptchRateIncr)
+    {
+        _pitch_dem = _last_pitch_dem + ptchRateIncr;
+    }
+    else if ((_pitch_dem - _last_pitch_dem) < -ptchRateIncr)
+    {
+        _pitch_dem = _last_pitch_dem - ptchRateIncr;
+    }
 
     _last_pitch_dem = _pitch_dem;
 }
@@ -1009,7 +994,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
     //cout<<"very_first" <<_hgt_dem<<endl;
     // Calculate time in seconds since last update
     float now = time_now;
-    _DT = max((now - _update_pitch_throttle_last_usec), 0) * 1.0e-6f;
+    _DT = max((now - _update_pitch_throttle_last_usec), 0);
     _THRmaxf = throttle_max;
     _THRminf = throttle_min;
     _PITCHmaxf = pitch_limit_max;

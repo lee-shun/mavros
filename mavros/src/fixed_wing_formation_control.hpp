@@ -257,6 +257,8 @@ private:
 		float speed_weight{1};
 
 		float time_const_throt{1.0};
+
+		float time_const{5.0};
 	} params;
 
 	string control_mode_prev;
