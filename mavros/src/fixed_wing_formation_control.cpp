@@ -520,6 +520,7 @@ void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
 {
     cout << "&&&&&&&&&&&&&&&&&&&以下是tecs控制器的状态打印#####################" << endl;
 
+    cout<<"mode"<<tecs_outputs.mode<<endl;
     cout << "airspeed_filtered"
          << "=" << tecs_outputs.airspeed_filtered << endl;
     cout << "airspeed_rate"
@@ -563,7 +564,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 {
 
-    ros::Rate rate(10.0);
+    ros::Rate rate(100.0);
     begin_time = ros::Time::now(); // 记录启控时间
 
     ros_sub_and_pub(&fixed_wing_sub_pub);

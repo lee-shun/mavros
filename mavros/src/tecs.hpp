@@ -23,13 +23,13 @@ public:
              _maxClimbRate(5.0f),
              _minSinkRate(1.0f),
              _maxSinkRate(2.0f),
-             _timeConst(5.0f),
+             _timeConst(2.0f),
              _timeConstThrot(8.0f),
              _ptchDamp(0.0f),
              _thrDamp(0.5f),
-             _integGain(0.1),
+             _integGain(0.8),
              _vertAccLim(10.0f),
-             _rollComp(15.0f),//可能是那个转弯补偿
+             _rollComp(15.0f), //可能是那个转弯补偿
              _spdWeight(0.5f),
              _heightrate_p(0.05),
              _heightrate_ff(0.8f),
@@ -568,10 +568,11 @@ void TECS::_initialise_states(float pitch, float throttle_cruise, float baro_alt
 	* 其中EAS为等效空速，TAS为实际空速，一般情况下，两者比例为1
 	*
 	***************************/
-    cout<<"_update_pitch_throttle_last_usec == 0"<<_update_pitch_throttle_last_usec<<endl;
+    cout << "_update_pitch_throttle_last_usec == 0" << _update_pitch_throttle_last_usec << endl;
 
-    if (_update_pitch_throttle_last_usec == 0 || _DT > DT_MAX || !_in_air || !_states_initalized)
+    if (_update_pitch_throttle_last_usec == 0)
     {
+        cout << "hhhhh" << endl;
         _integ1_state = 0.0f;
         _integ2_state = 0.0f;
         _integ3_state = baro_altitude;
@@ -695,7 +696,7 @@ void TECS::_update_STE_rate_lim()
     _STEdot_min = -_minSinkRate * CONSTANTS_ONE_G;
 }
 
-void TECS::_detect_underspeed()//初始化之后默认是打开的
+void TECS::_detect_underspeed() //初始化之后默认是打开的
 {
     if (!_detect_underspeed_enabled)
     {
@@ -746,11 +747,11 @@ void TECS::_update_speed_demand()
     }
 
     _TAS_dem_adj = constrain(_TAS_dem, _TASmin, _TASmax);
-    _TAS_rate_dem = constrain((_TAS_dem_adj - _integ5_state) * _speedrate_p, velRateMin, velRateMax); 
+    _TAS_rate_dem = constrain((_TAS_dem_adj - _integ5_state) * _speedrate_p, velRateMin, velRateMax);
     //xxx: using a p loop for now p控制产生速度的rate的期望值
 }
 
-void TECS::_update_height_demand(float demand, float state)//state是当前的实际高度，气压计
+void TECS::_update_height_demand(float demand, float state) //state是当前的实际高度，气压计
 {
     // Handle initialization
     if (fabsf(_hgt_dem_in_old) < 0.1f)
@@ -768,22 +769,22 @@ void TECS::_update_height_demand(float demand, float state)//state是当前的�
     // {
     //     _hgt_dem = _hgt_dem_in_old;
     // }
-     _hgt_dem_in_old = _hgt_dem;//将现在的期望高度记录一下，下一次用
+    _hgt_dem_in_old = _hgt_dem; //将现在的期望高度记录一下，下一次用
 
     // Limit height demand
     // this is important to avoid a windup
-    if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
-    {
-        _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
-    }
-    else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
-    {
-        _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
-    }
+    // if ((_hgt_dem - _hgt_dem_prev) > (_maxClimbRate * _DT))
+    // {
+    //     _hgt_dem = _hgt_dem_prev + _maxClimbRate * _DT;
+    // }
+    // else if ((_hgt_dem - _hgt_dem_prev) < (-_maxSinkRate * _DT))
+    // {
+    //     _hgt_dem = _hgt_dem_prev - _maxSinkRate * _DT;
+    // }
 
     _hgt_dem_prev = _hgt_dem;
 
-    cout<<"in the _update_height_demand" <<_hgt_dem<<endl;
+    cout << "in the _update_height_demand" << _hgt_dem << endl;
 
     _hgt_dem_adj = 0.1f * _hgt_dem + 0.9f * _hgt_dem_adj_last;
     //_hgt_dem_adj = demand;
@@ -823,6 +824,11 @@ void TECS::_update_energies()
 void TECS::_update_throttle(float throttle_cruise, const float rotMat[3][3])
 {
     // 计算总能量的error
+    cout<<"_SPE_dem"<<_SPE_dem<<endl;
+    cout<<"_SPE_est"<<_SPE_est<<endl;
+    cout<<"_SKE_dem"<<_SKE_dem<<endl;
+    cout<<"_SKE_est"<<_SKE_est<<endl;
+
     _STE_error = _SPE_dem - _SPE_est + _SKE_dem - _SKE_est;
     float STEdot_dem = constrain((_SPEdot_dem + _SKEdot_dem), _STEdot_min, _STEdot_max);
 
@@ -847,7 +853,7 @@ void TECS::_update_throttle(float throttle_cruise, const float rotMat[3][3])
         float ff_throttle = 0;
         float nomThr = throttle_cruise;
 
-        float cosPhi = sqrtf((rotMat[0][1] * rotMat[0][1]) + (rotMat[1][1] * rotMat[1][1]));//存疑，因为旋转矩阵不一定对。。。。
+        float cosPhi = sqrtf((rotMat[0][1] * rotMat[0][1]) + (rotMat[1][1] * rotMat[1][1])); //存疑，因为旋转矩阵不一定对。。。。
         STEdot_dem = STEdot_dem + _rollComp * (1.0f / constrain(cosPhi, 0.1f, 1.0f) - 1.0f);
         //计算前馈项
         if (STEdot_dem >= 0)
@@ -896,18 +902,15 @@ void TECS::_update_throttle(float throttle_cruise, const float rotMat[3][3])
         if (airspeed_sensor_enabled())
         {
             _throttle_dem = _throttle_dem + _integ6_state;
-            
         }
         else
         {
             _throttle_dem = ff_throttle;
-              
         }
 
         // 保护
 
         _throttle_dem = constrain(_throttle_dem, _THRminf, _THRmaxf);
-       
     }
 }
 
@@ -975,20 +978,26 @@ void TECS::_update_pitch()
     // 将PD+ff控制的第二步，将能量转化率的error转换到期望的俯仰角
     _pitch_dem_unc = (SEB_correction + _integ7_state) / gainInv;
 
+    // cout<<"能量分配误差"<<SEB_correction<<endl;
+    // cout<<"_integ7_state"<<_integ7_state<<endl;
+    // cout<<"_pitch_dem_unc"<<_pitch_dem_unc<<endl;
+    
+
     // Constrain pitch demand
     _pitch_dem = constrain(_pitch_dem_unc, _PITCHminf, _PITCHmaxf);
 
-    // 对pitch的角速度做限制，不会超出_vertAccLim
-    float ptchRateIncr = _DT * _vertAccLim / _integ5_state;
 
-    if ((_pitch_dem - _last_pitch_dem) > ptchRateIncr)
-    {
-        _pitch_dem = _last_pitch_dem + ptchRateIncr;
-    }
-    else if ((_pitch_dem - _last_pitch_dem) < -ptchRateIncr)
-    {
-        _pitch_dem = _last_pitch_dem - ptchRateIncr;
-    }
+    // // 对pitch的角速度做限制，不会超出_vertAccLim、、这个地方有问题，限制住了demand
+    // float ptchRateIncr = _DT * _vertAccLim / _integ5_state;
+
+    // if ((_pitch_dem - _last_pitch_dem) > ptchRateIncr)
+    // {
+    //     _pitch_dem = _last_pitch_dem + ptchRateIncr;
+    // }
+    // else if ((_pitch_dem - _last_pitch_dem) < -ptchRateIncr)
+    // {
+    //     _pitch_dem = _last_pitch_dem - ptchRateIncr;
+    // }
 
     _last_pitch_dem = _pitch_dem;
 }
@@ -1018,7 +1027,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
 	* _integ7_state <---- pitch的积分量；
 	***************************/
     _initialise_states(pitch, throttle_cruise, baro_altitude, ptchMinCO, EAS2TAS);
-    
+
     /**************************
 	*
 	* 1. 计算当前的空速，对测量到的空速做一个二阶的低通滤波
@@ -1039,7 +1048,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
     // * 3. 检查有没有失速
     // *
     // ***************************/
-    _detect_underspeed();
+    //_detect_underspeed();
 
     // /**************************
     // *

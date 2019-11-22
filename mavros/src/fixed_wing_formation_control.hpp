@@ -250,13 +250,13 @@ private:
 
 		float throttle_cruise{0.1};
 
-		float pitch_min_rad{-45};
+		float pitch_min_rad{-0.5};
 
-		float pitch_max_rad{45};
+		float pitch_max_rad{0.5};
 
 		float speed_weight{1};
 
-		float time_const_throt{8.0};
+		float time_const_throt{1.0};
 	} params;
 
 	string control_mode_prev;
