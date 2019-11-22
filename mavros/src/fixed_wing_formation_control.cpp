@@ -183,10 +183,10 @@ void _FIXED_WING_FORMATION_CONTROL::trans_the_sp_for_send()
     //在这里要进行中间转换，欧美系的期望值存储在follower_setpoint，转换后的存在sp_to_send中
     sp_to_send.roll_angle = follower_setpoint.roll_angle;
 
-    if (-follower_setpoint.yaw_angle + deg_2_rad(90.0) < 0)
-        sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0);
-    else
-        sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0) + deg_2_rad(360.0);
+    //if (-follower_setpoint.yaw_angle + deg_2_rad(90.0) < 0)
+    sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0);
+    // else
+    //     sp_to_send.yaw_angle = -follower_setpoint.yaw_angle + deg_2_rad(90.0) + deg_2_rad(360.0);
 
     sp_to_send.pitch_angle = -follower_setpoint.pitch_angle;
 
@@ -230,9 +230,9 @@ void _FIXED_WING_FORMATION_CONTROL::test()
 {
 
     //当前是屏蔽角速度控制的mavros
-    follower_setpoint.roll_angle = 0.0;
+    follower_setpoint.roll_angle = 0.1;
 
-    follower_setpoint.yaw_angle = 0.0;
+    follower_setpoint.yaw_angle = 0.2;
     //将期望高度和期望空速赋值
     follower_setpoint.air_speed = 18.5;
 
@@ -514,7 +514,8 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
 
     error_follwer1.altitude = follower_setpoint.altitude - follower_status.altitude;
 
-    double m[2] = = cov_lat_long_2_m(follwer_pos, follower_sp_pos);
+    double m[2];
+    cov_lat_long_2_m(follwer_pos, follower_sp_pos, m);
 
     error_follwer1.n_diatance = m[0]; //机载ned
     error_follwer1.e_distance = m[1];
@@ -563,7 +564,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
         params.climboutdem = false;
     }
 
-    calculate_the_desire_airspeed();
+    //calculate_the_desire_airspeed();
 
     _tecs.update_state(current_time, follower_status.altitude,
                        follower_status.air_speed, follower_status.rotmat,
@@ -635,18 +636,16 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
     follower_setpoint.ned_acc_x = delat_a_n + leader_status.ned_acc_x;
     follower_setpoint.ned_acc_y = delat_a_e + leader_status.ned_acc_y;
 
-//将ned下的加速度期望值转换到体轴系下
+    //将ned下的加速度期望值转换到体轴系下
     follower_setpoint.body_acc_x = cos(follower_status.yaw_angle) * follower_setpoint.ned_acc_x +
                                    sin(follower_status.yaw_angle) * follower_setpoint.ned_acc_y;
 
     follower_setpoint.body_acc_y = -sin(follower_status.yaw_angle) * follower_setpoint.ned_acc_x +
                                    cos(follower_status.yaw_angle) * follower_setpoint.ned_acc_y;
 
-
     //去掉x方向的加速度，利用协调转弯，计算滚转角期望值
 
-    follower_setpoint.roll_angle = atan(follower_setpoint.body_acc_y/CONSTANTS_ONE_G);
-
+    follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -0.5, 0.5); //atan返回的是弧度制下的-90到90
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
@@ -685,13 +684,13 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             show_fixed_wing_status(2);
 
             //从机的期望值从这里开始被赋值
-            //test(); //在这里面将期望高度，期望空速赋值
+            test(); //在这里面将期望高度，期望空速赋值
 
-            foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
+            //foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
 
             control_vertical(current_time); //控制高度，空速
 
-            control_lateral(current_time); //控制水平位置（速度方向）
+            //control_lateral(current_time); //控制水平位置（速度方向）
 
             show_tecs_status();
 

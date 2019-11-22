@@ -128,7 +128,7 @@ void cov_m_2_lat_long_alt(const float ref[3], float x, float y, float z, float r
     result[2] = ref[2] + z; //高度
 }
 
-double cov_lat_long_2_m(float a_pos[2], float b_pos[2])
+void cov_lat_long_2_m(float a_pos[2], float b_pos[2],double m[2])
 { //参考点是a点，lat，long，alt
     double lat1 = a_pos[0];
     double lon1 = a_pos[1];
@@ -142,11 +142,9 @@ double cov_lat_long_2_m(float a_pos[2], float b_pos[2])
     double r_at_ref1 = cos(lat1) * EARTH_RADIUS;
 
     double e_distance = deg_2_rad(lon2-lon1)*r_at_ref1;
-    double m[2];
-
+    
     m[0]=n_distance;
     m[1]=e_distance;
-    return m;
 }
 
 #endif
