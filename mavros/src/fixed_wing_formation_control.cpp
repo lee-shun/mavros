@@ -230,11 +230,11 @@ void _FIXED_WING_FORMATION_CONTROL::test()
 {
 
     //当前是屏蔽角速度控制的mavros
-    follower_setpoint.roll_angle = 0.1;
+    follower_setpoint.roll_angle = 0.3;
 
     follower_setpoint.yaw_angle = 0.2;
     //将期望高度和期望空速赋值
-    follower_setpoint.air_speed = 18.5;
+    follower_setpoint.air_speed = 15;
 
     follower_setpoint.altitude = 580.0;
 }
