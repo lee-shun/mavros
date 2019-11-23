@@ -170,7 +170,7 @@ target_link_libraries(gcs_bridge
 
 
 add_executable(fixed_wing_formation_control
-  src/fixed_wing_formation_control.cpp
+  src/fixed_wing_formation_control/fixed_wing_formation_main/fixed_wing_formation_control.cpp
 )
 target_link_libraries(fixed_wing_formation_control
   mavros
@@ -178,7 +178,7 @@ target_link_libraries(fixed_wing_formation_control
 )
 
 add_executable(mavros_example_3
-  src/mavros_example_3.cpp
+src/fixed_wing_formation_control/fixed_wing_formation_main/mavros_example_3.cpp
 )
 target_link_libraries(mavros_example_3
   mavros
@@ -186,7 +186,7 @@ target_link_libraries(mavros_example_3
 )
 
 add_executable(test_mavlink
-  src/test_mavlink.cpp
+src/fixed_wing_formation_control/fixd_wing_communicate/test_mavlink.cpp
 )
 target_link_libraries(test_mavlink
   mavros

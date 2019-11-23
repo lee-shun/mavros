@@ -12,9 +12,9 @@
 #include <fstream>
 #include <math.h>
 #include <string>
-#include "fixed_wing_sub_pub.hpp"
-#include "mathlib.h"
-#include "tecs.hpp"
+#include "../fixed_wing_lib/fixed_wing_sub_pub.hpp"
+#include "../fixed_wing_lib/mathlib.h"
+#include "../fixed_wing_lib/tecs.hpp"
 
 using namespace std;
 
