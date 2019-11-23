@@ -1,17 +1,39 @@
-#include <ros/ros.h>
-#include <serial/serial.h>
-#include <iostream>
-
-using namespace std;
-
-int main(int argc, char **argv)
+#include "test_mavlink.hpp"
+void FIXED_WING_MAVLINK::handle_message(mavlink_message_t *msg)
 {
-    ros::init(argc, argv, "gps_receiver");
-    ros::NodeHandle nh;
+    switch (msg->msgid)
+    {
 
-    //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>          串口 打开           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+    case MAVLINK_MSG_ID_HEARTBEAT:
+        handle_message_heartbeat(msg);
+        break;
+
+        // case MAVLINK_MSG_ID_BATTERY_STATUS:
+        //     handle_message_battery_status(msg);
+        //     break;
+
+    default:
+        break;
+    }
+}
+
+void FIXED_WING_MAVLINK::handle_message_heartbeat(mavlink_message_t *msg)
+{
+    /* telemetry status supported only on first TELEMETRY_STATUS_ORB_ID_NUM mavlink channels */
+
+    mavlink_heartbeat_t hb;
+    mavlink_msg_heartbeat_decode(msg, &hb);
+
+    /* Accept only heartbeats from GCS or ONBOARD Controller, skip heartbeats from other vehicles */
+    //if ((msg->sysid != mavlink_system.sysid && hb.type == MAV_TYPE_GCS) || (msg->sysid == mavlink_system.sysid && hb.type == MAV_TYPE_ONBOARD_CONTROLLER))
+    {
+        cout << "in the handle heartbeat" << endl;
+    }
+}
+int FIXED_WING_MAVLINK::open_the_seial()
+{
     //串口serial设置&开启
-    serial::Serial sp;                                       //创建一个serial类
+
     serial::Timeout to = serial::Timeout::simpleTimeout(10); //创建timeout
     sp.setPort("/dev/ttyACM0");                              //设置要打开的串口名称
     sp.setBaudrate(115200);                                  //设置串口通信的波特率
@@ -24,18 +46,56 @@ int main(int argc, char **argv)
     catch (serial::IOException &e)
     {
         ROS_ERROR_STREAM("Unable to open port.");
-        return -1;
+        return 0;
     }
     //判断串口是否打开成功
     if (sp.isOpen())
     {
-        ROS_INFO_STREAM("/dev/ttyUSB0 is opened.");
+        ROS_INFO_STREAM("/dev/ttyACM0 is opened.");
+        return 1;
     }
     else
     {
-        return -1;
+        return 0;
     }
-    //----------------------------------------          串口打开 完成         --------------------------------------------------//
+}
+void FIXED_WING_MAVLINK::run()
+{
+    nread = sp.available();
 
-    ros::Rate loop_rate(20);
+    ros::Rate rate(20);
+
+    int a = open_the_seial();
+
+    while (ros::ok())
+    {
+        nread = sp.read(buf, nread);
+
+        for (size_t i = 0; i < nread; i++)
+        {
+            cout <<"hhh"<< hex << (buf[i] & 0xff) << "  ";
+            
+            if (mavlink_parse_char(_channel, buf[i], &msg, &_status))
+            {
+                handle_message(&msg);
+            }
+        }
+
+        ros::spinOnce();
+        //挂起一段时间(rate为 50HZ
+        rate.sleep();
+    }
+
+    sp.close();
+}
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "fixed_wing_mavlink");
+
+    FIXED_WING_MAVLINK _fixed_wing_mavlink;
+
+    _fixed_wing_mavlink.run();
+
+    return 0;
 }

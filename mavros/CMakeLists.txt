@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf2_eigen
   tf2_ros
+  serial
 )
 
 ## System dependencies are found with CMake's conventions
@@ -180,6 +181,14 @@ add_executable(mavros_example_3
   src/mavros_example_3.cpp
 )
 target_link_libraries(mavros_example_3
+  mavros
+  ${catkin_LIBRARIES}
+)
+
+add_executable(test_mavlink
+  src/test_mavlink.cpp
+)
+target_link_libraries(test_mavlink
   mavros
   ${catkin_LIBRARIES}
 )
