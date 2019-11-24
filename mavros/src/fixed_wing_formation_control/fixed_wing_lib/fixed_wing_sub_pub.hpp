@@ -100,7 +100,7 @@ public:
 
     mavros_msgs::AttitudeTarget att_sp;
 
-    mavros_msgs::Formation_fixed_wing states_trasnode;
+    mavros_msgs::Formation_fixed_wing fixed_wing_states_tran;//这个是自定义的飞机状态消息
 
     float att_sp_Euler[3];
     float thrust_sp;
@@ -188,6 +188,11 @@ public:
     void air_ground_speed_from_px4_cb(const mavros_msgs::VFR_HUD::ConstPtr &msg)
     {
         air_ground_speed_from_px4 = *msg;
+    }
+
+    void fixed_wing_states_tran_cb(const mavros_msgs::Formation_fixed_wing::ConstPtr &msg)
+    {
+        fixed_wing_states_tran = *msg;
     }
 };
 

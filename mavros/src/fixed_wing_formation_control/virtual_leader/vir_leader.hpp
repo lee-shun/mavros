@@ -24,12 +24,14 @@ private:
 
     ros::Time begin_time;
 
+    ros::Publisher vir_leader_pub;
+
 public:
     _FIXED_WING_SUB_PUB fixed_wing_sub_pub;
 
     void run(int argc, char **argv);
 
-    
+    void ros_sub_pub();
 };
 
 #endif

@@ -97,8 +97,12 @@ private:
 
 	ros::Subscriber // 【订阅】无人机的高度
 		fixed_wing_altitude_from_px4_sub;
+
 	ros::Subscriber // 【订阅】无人机的空速地速
 		fixed_wing_air_ground_speed_from_px4_sub;
+
+	ros::Subscriber // 【订阅】通讯节点的消息
+		fixed_wing_states_tran_sub;
 
 	struct _s_fixed_wing_status
 	{
@@ -334,7 +338,7 @@ public:
 
 	bool set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode);
 
-	bool update_leader_status();
+	bool update_leader_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
 	void show_fixed_wing_status(int PlaneID);
 

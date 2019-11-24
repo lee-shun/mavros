@@ -146,6 +146,10 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<mavros_msgs::VFR_HUD> //
           ("/mavros/vfr_hud", 10, &_FIXED_WING_SUB_PUB::air_ground_speed_from_px4_cb, fixed_wing_sub_pub_poiter);
 
+    fixed_wing_states_tran_sub //订阅空速、地速
+        = nh.subscribe<mavros_msgs::Formation_fixed_wing> //
+          ("/mavros/fixed_wing_formation/status", 10, &_FIXED_WING_SUB_PUB::fixed_wing_states_tran_cb, fixed_wing_sub_pub_poiter);
+
     //##########################################订阅消息###################################################//
 
     //##########################################发布消息###################################################//
@@ -396,9 +400,11 @@ void _FIXED_WING_FORMATION_CONTROL::show_control_state(_FIXED_WING_SUB_PUB *fixe
     cout << "***************以上是从机的控制状态***************" << endl;
 }
 
-bool _FIXED_WING_FORMATION_CONTROL::update_leader_status()
+bool _FIXED_WING_FORMATION_CONTROL::update_leader_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
-    //
+    leader_status.air_speed = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.air_speed;
+
+    cout<<"leader_status.air_speed"<<leader_status.air_speed<<endl;
 }
 bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
@@ -662,7 +668,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_follwer_status(&fixed_wing_sub_pub);
 
-        update_leader_status();
+        update_leader_status(&fixed_wing_sub_pub);
 
         if (follower_status.mode != "OFFBOARD")
         {
@@ -672,6 +678,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
             show_fixed_wing_status(2);
+            //show_fixed_wing_status(1);
         }
 
         else
