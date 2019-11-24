@@ -54,7 +54,8 @@ add_message_files(
   WaypointList.msg
   WaypointReached.msg
   WheelOdomStamped.msg
-)
+  Formation_fixed_wing.msg
+  )
 
 add_service_files(
   DIRECTORY srv

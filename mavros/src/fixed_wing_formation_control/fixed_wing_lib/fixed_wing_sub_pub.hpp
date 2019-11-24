@@ -33,6 +33,8 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/GlobalPositionTarget.h>
 
+#include <mavros_msgs/Formation_fixed_wing.h>//自定义的传输消息
+
 #include "fixed_wing_mathlib.hpp"
 
 #define the_space_between_lines 1  //为了打印中间空格
@@ -76,6 +78,8 @@ public:
 
     mavros_msgs::VFR_HUD air_ground_speed_from_px4;
 
+    
+
     //服务项暂存容器
     mavros_msgs::SetMode mode_cmd;
 
@@ -95,6 +99,8 @@ public:
     mavros_msgs::GlobalPositionTarget global_pos_sp;
 
     mavros_msgs::AttitudeTarget att_sp;
+
+    mavros_msgs::Formation_fixed_wing states_trasnode;
 
     float att_sp_Euler[3];
     float thrust_sp;

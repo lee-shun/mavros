@@ -1,0 +1,84 @@
+# Message 固定翼的编队控制，可能用到的消息类型全定义
+		uint16 planeID
+
+        uint16 targ_planeID
+        
+        bool altitude_lock
+
+		bool in_air
+
+		string mode
+
+		geometry_msgs/Quaternion orientation #姿态四元数，只能在外面弄下旋转矩阵了
+
+		float64 ground_speed_ned_param1
+
+		float64 ground_speed_ned_param2
+
+		float64 ground_speed
+
+		float64 global_vel_x
+
+		float64 global_vel_y
+
+		float64 global_vel_z
+
+		float64 air_speed
+
+		float64 wind_estimate_x
+
+		float64 wind_estimate_y
+
+		float64 wind_estimate_z
+
+		float64 relative_hight
+
+		float64 latitude
+
+		float64 altitude
+
+		float64 longtitude
+
+		float64 relative_alt
+
+		float64 ned_altitude
+
+		float64 ned_pos_x
+
+		float64 ned_pos_y
+
+		float64 ned_pos_z
+
+		float64 ned_vel_x
+
+		float64 ned_vel_y
+
+		float64 ned_vel_z
+
+		float64 ned_acc_x
+
+		float64 ned_acc_y
+
+		float64 ned_acc_z
+
+		geometry_msgs/Vector3 ned_acc
+
+		float64 body_acc_x
+
+		float64 body_acc_y
+
+		float64 body_acc_z
+
+		geometry_msgs/Vector3 body_acc
+
+		float64 pitch_angle
+
+		float64 yaw_angle
+
+		float64 roll_angle
+
+		float64 battery_voltage
+
+		float64 battery_precentage
+
+		float64 battery_current

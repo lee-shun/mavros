@@ -193,6 +193,14 @@ target_link_libraries(test_mavlink
   ${catkin_LIBRARIES}
 )
 
+add_executable(vir_leader
+src/fixed_wing_formation_control/virtual_leader/vir_leader.cpp
+)
+target_link_libraries(vir_leader
+  mavros
+  ${catkin_LIBRARIES}
+)
+
 
 
 #############
