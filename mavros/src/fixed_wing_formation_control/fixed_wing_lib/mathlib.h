@@ -130,10 +130,11 @@ void cov_lat_long_2_m(float a_pos[2], float b_pos[2], double m[2])
     double lat2 = b_pos[0];
     double lon2 = b_pos[1];
 
-    double n_distance = deg_2_rad(lat2 - lat1) * EARTH_RADIUS;
+    double n_distance = deg_2_rad(lon2 - lon1) * EARTH_RADIUS; //涉及到ned是向北增加，且纬度向北也增加
+
     double r_at_ref1 = cos(lat1) * EARTH_RADIUS;
 
-    double e_distance = deg_2_rad(lon2 - lon1) * r_at_ref1;
+    double e_distance = -deg_2_rad(lat2 - lat1) * r_at_ref1; //涉及到ned是向东增加，但是经度向东减少
 
     m[0] = n_distance;
     m[1] = e_distance;

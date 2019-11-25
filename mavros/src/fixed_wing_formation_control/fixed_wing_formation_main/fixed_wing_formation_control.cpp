@@ -425,7 +425,7 @@ bool _FIXED_WING_FORMATION_CONTROL::update_leader_status(_FIXED_WING_SUB_PUB *fi
 
     leader_status.ned_vel_z = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.ned_vel_z;
 
-    cout << "leader_status.air_speed" << leader_status.air_speed << endl;
+    cout << "leader_status.latitude = " << leader_status.latitude << endl;
 }
 bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
@@ -539,18 +539,27 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
     follower_sp_pos[0] = follower_setpoint.latitude;
     follower_sp_pos[1] = follower_setpoint.longtitude;
 
+
+
+    //经纬高的误差
+    error_follwer1.latitude = follower_setpoint.latitude - follower_status.latitude;
+    error_follwer1.longtitude = follower_setpoint.longtitude - follower_status.longtitude;
     error_follwer1.altitude = follower_setpoint.altitude - follower_status.altitude;
 
     double m[2];
+
     cov_lat_long_2_m(follwer_pos, follower_sp_pos, m);
 
     error_follwer1.n_diatance = m[0]; //机载ned
     error_follwer1.e_distance = m[1];
 
-    error_follwer1.distance_level = sqrt(m[0] * m[0] + m[1] * m[1]);
+    cout << "北向m[0]" << m[0] << endl;
+    cout << "东乡m[1]" << m[1] << endl;
 
-    error_follwer1.distance_3d = sqrt(error_follwer1.altitude * error_follwer1.altitude +
-                                      error_follwer1.distance_level * error_follwer1.distance_level);
+    error_follwer1.distance_level = sqrt((m[0] * m[0] + m[1] * m[1]));
+
+    error_follwer1.distance_3d = sqrt((error_follwer1.altitude * error_follwer1.altitude +
+                                      error_follwer1.distance_level * error_follwer1.distance_level));
 
     error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_setpoint.ned_vel_x;
 
@@ -724,13 +733,13 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_leader_status(&fixed_wing_sub_pub);
 
-        show_fixed_wing_status(2);
+        //show_fixed_wing_status(2);
 
         foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
 
         show_formation_error(2);//上一步计算的误差打印一下
 
-        show_fixed_wing_setpoint(2); //打印从机期望值
+        //show_fixed_wing_setpoint(2); //打印从机期望值
 
         if (follower_status.mode != "OFFBOARD")
         {
