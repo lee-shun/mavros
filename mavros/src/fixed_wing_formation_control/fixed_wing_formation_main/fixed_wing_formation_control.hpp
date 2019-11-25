@@ -285,6 +285,10 @@ private:
 
 		float e_distance{0};
 
+		float Xb_distance{0};
+
+		float Yb_distance{0};
+
 		float airspeed{0};
 
 		float groundspeed{0};
@@ -319,7 +323,7 @@ private:
 
 	struct _s_control_lateral_params
 	{
-		float kp{0.1};
+		float kp{30};
 
 		float kd{0};
 	} control_lateral_params;
@@ -380,6 +384,8 @@ public:
 	void show_tecs_status();
 
 	void control_lateral(float current_time);
+
+	void control_lateral2();//另一种控制方法
 };
 
 #endif

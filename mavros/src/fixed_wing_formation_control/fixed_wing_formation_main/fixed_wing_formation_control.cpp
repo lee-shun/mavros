@@ -539,8 +539,6 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
     follower_sp_pos[0] = follower_setpoint.latitude;
     follower_sp_pos[1] = follower_setpoint.longtitude;
 
-
-
     //经纬高的误差
     error_follwer1.latitude = follower_setpoint.latitude - follower_status.latitude;
     error_follwer1.longtitude = follower_setpoint.longtitude - follower_status.longtitude;
@@ -559,7 +557,7 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
     error_follwer1.distance_level = sqrt((m[0] * m[0] + m[1] * m[1]));
 
     error_follwer1.distance_3d = sqrt((error_follwer1.altitude * error_follwer1.altitude +
-                                      error_follwer1.distance_level * error_follwer1.distance_level));
+                                       error_follwer1.distance_level * error_follwer1.distance_level));
 
     error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_setpoint.ned_vel_x;
 
@@ -717,6 +715,55 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
     follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -1, 1); //atan返回的是弧度制下的-90到90
 }
 
+void _FIXED_WING_FORMATION_CONTROL::control_lateral2()
+{
+    int angle_zone_flag = 0;
+
+    float angle_error;
+
+    //将ned下的位置误差转换到体轴系下,得到的是机体系下的目标点的位置坐标
+    error_follwer1.Xb_distance = cos(follower_status.yaw_angle) * error_follwer1.n_diatance +
+                                 sin(follower_status.yaw_angle) * error_follwer1.e_distance;
+
+    error_follwer1.Yb_distance = -sin(follower_status.yaw_angle) * error_follwer1.n_diatance +
+                                 cos(follower_status.yaw_angle) * error_follwer1.e_distance;
+
+    cout << "error_follwer1.Xb_distance" << error_follwer1.Xb_distance << endl;
+
+    cout << "error_follwer1.Yb_distance" << error_follwer1.Yb_distance << endl;
+
+    float angle_error_raw = atan(error_follwer1.Yb_distance / (error_follwer1.Xb_distance + 0.01)); //注意机体系的坐标
+
+    if (error_follwer1.Xb_distance >= 0 && error_follwer1.Yb_distance > 0)
+    {
+        angle_zone_flag = 1;
+        angle_error = angle_error_raw;
+    }
+    else if (error_follwer1.Xb_distance >= 0 && error_follwer1.Yb_distance < 0)
+    {
+        angle_zone_flag = 2;
+        angle_error = angle_error_raw; //本身是个负的
+    }
+    else if (error_follwer1.Xb_distance < 0 && error_follwer1.Yb_distance <= 0)
+    {
+        angle_zone_flag = 3;
+        angle_error = angle_error_raw - deg_2_rad(180); //本身是个负的
+    }
+    else
+    {
+        angle_zone_flag = 4;
+        angle_error = angle_error_raw + deg_2_rad(180);
+    }
+    cout << "angle_zone_flag====" << angle_zone_flag << endl;
+    cout << "angle_error====" << angle_error << endl;
+
+    //1和4象限为正，2和3象限为负，和期望产生的加速度的符号相同
+    follower_setpoint.body_acc_y = (follower_status.air_speed * follower_status.air_speed * angle_error) /
+                                   control_lateral_params.kp;
+
+    follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -1, 1); //atan返回的是弧度制下的-90到90
+}
+
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 {
 
@@ -737,9 +784,9 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
 
-        show_formation_error(2);//上一步计算的误差打印一下
+        show_formation_error(2); //上一步计算的误差打印一下
 
-        //show_fixed_wing_setpoint(2); //打印从机期望值
+        show_fixed_wing_setpoint(2); //打印从机期望值
 
         if (follower_status.mode != "OFFBOARD")
         {
@@ -760,8 +807,8 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
             control_vertical(current_time); //控制高度，空速
 
-            control_lateral(current_time); //控制水平位置（速度方向）
-
+            //control_lateral(current_time); //控制水平位置（速度方向）
+            control_lateral2(); //控制水平位置（速度方向）
             //show_tecs_status();
 
             send_setpoint_to_px4(&fixed_wing_sub_pub);
