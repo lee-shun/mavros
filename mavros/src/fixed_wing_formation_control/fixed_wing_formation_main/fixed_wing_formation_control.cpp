@@ -715,8 +715,12 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
     follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -1, 1); //atan返回的是弧度制下的-90到90
 }
 
-void _FIXED_WING_FORMATION_CONTROL::control_lateral2()
+void _FIXED_WING_FORMATION_CONTROL::control_lateral2(float current_time)
 {
+    float last_angle_error = 0.0;
+
+    float DT = current_time - last_time_lateral;
+
     int angle_zone_flag = 0;
 
     float angle_error;
@@ -742,12 +746,12 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral2()
     else if (error_follwer1.Xb_distance >= 0 && error_follwer1.Yb_distance < 0)
     {
         angle_zone_flag = 2;
-        angle_error = angle_error_raw; //本身是个负的
+        angle_error = deg_2_rad(360) + angle_error_raw; //本身是个负的
     }
     else if (error_follwer1.Xb_distance < 0 && error_follwer1.Yb_distance <= 0)
     {
         angle_zone_flag = 3;
-        angle_error = angle_error_raw - deg_2_rad(180); //本身是个负的
+        angle_error = angle_error_raw + deg_2_rad(180); //////
     }
     else
     {
@@ -758,10 +762,14 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral2()
     cout << "angle_error====" << angle_error << endl;
 
     //1和4象限为正，2和3象限为负，和期望产生的加速度的符号相同
-    follower_setpoint.body_acc_y = (follower_status.air_speed * follower_status.air_speed * angle_error) /
-                                   control_lateral_params.kp;
+    float angle_error_dot = (angle_error - last_angle_error) / DT;
+    float gama_dot = control_lateral_params.kp * angle_error + control_lateral_params.kd * angle_error_dot;
 
-    follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -1, 1); //atan返回的是弧度制下的-90到90
+    follower_setpoint.roll_angle = constrain(atan(gama_dot * CONSTANTS_ONE_G / follower_status.air_speed), -1, 1); //atan返回的是弧度制下的-90到90
+
+    last_angle_error = angle_error;
+
+    last_time_lateral = current_time;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
@@ -805,10 +813,14 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
 
+            current_time = get_ros_time(begin_time);
+
             control_vertical(current_time); //控制高度，空速
 
+            current_time = get_ros_time(begin_time);
+
             //control_lateral(current_time); //控制水平位置（速度方向）
-            control_lateral2(); //控制水平位置（速度方向）
+            control_lateral2(current_time); //控制水平位置（速度方向）
             //show_tecs_status();
 
             send_setpoint_to_px4(&fixed_wing_sub_pub);

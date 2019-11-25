@@ -34,7 +34,9 @@ private:
 
 	struct TECS::tecs_state tecs_outputs;
 
-	float current_time;
+	float current_time{0};
+
+	float last_time_lateral{0};
 
 	ros::NodeHandle nh;
 
@@ -323,9 +325,9 @@ private:
 
 	struct _s_control_lateral_params
 	{
-		float kp{30};
+		float kp{0.1};
 
-		float kd{0};
+		float kd{0.1};
 	} control_lateral_params;
 
 public:
@@ -385,7 +387,7 @@ public:
 
 	void control_lateral(float current_time);
 
-	void control_lateral2();//另一种控制方法
+	void control_lateral2(float current_time);//另一种控制方法
 };
 
 #endif
