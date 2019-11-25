@@ -14,6 +14,11 @@
 #include <string>
 
 #include "../fixed_wing_lib/fixed_wing_sub_pub.hpp"
+#include "../fixed_wing_lib/mathlib.h"
+
+#define LEADER_HOME_LAT 47.3980795
+#define LEADER_HOME_LONG 8.5441407
+#define LEADER_HOME_ALT 580
 
 using namespace std;
 
@@ -26,12 +31,20 @@ private:
 
     ros::Publisher vir_leader_pub;
 
+    float current_time;
+
+    float last_time;
+
+    float distance_e;
+
 public:
     _FIXED_WING_SUB_PUB fixed_wing_sub_pub;
 
     void run(int argc, char **argv);
 
     void ros_sub_pub();
+
+    void show_vir_leader_status();
 };
 
 #endif

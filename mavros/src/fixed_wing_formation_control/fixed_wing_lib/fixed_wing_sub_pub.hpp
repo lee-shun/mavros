@@ -33,7 +33,7 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/GlobalPositionTarget.h>
 
-#include <mavros_msgs/Formation_fixed_wing.h>//自定义的传输消息
+#include <mavros_msgs/Formation_fixed_wing.h> //自定义的传输消息
 
 #include "fixed_wing_mathlib.hpp"
 
@@ -78,8 +78,6 @@ public:
 
     mavros_msgs::VFR_HUD air_ground_speed_from_px4;
 
-    
-
     //服务项暂存容器
     mavros_msgs::SetMode mode_cmd;
 
@@ -100,13 +98,21 @@ public:
 
     mavros_msgs::AttitudeTarget att_sp;
 
-    mavros_msgs::Formation_fixed_wing fixed_wing_states_tran;//这个是自定义的飞机状态消息
+    mavros_msgs::Formation_fixed_wing fixed_wing_states_tran; //这个是自定义的飞机状态消息
 
     float att_sp_Euler[3];
     float thrust_sp;
 
     float PIX_Euler_target[3]; //无人机 期望欧拉角(从飞控中读取)
     float att_angle_Euler[3];  //无人机当前欧拉角(从飞控中读取)
+
+    float get_ros_time(ros::Time begin)//获取ros时间
+    {
+        ros::Time time_now = ros::Time::now();
+        float currTimeSec = time_now.sec - begin.sec;
+        float currTimenSec = time_now.nsec / 1e9 - begin.nsec / 1e9;
+        return (currTimeSec + currTimenSec);
+    }
 
     void state_cb(const mavros_msgs::State::ConstPtr &msg)
     {

@@ -102,33 +102,27 @@ float deg_2_rad(float deg)
 }
 
 //ref,result---lat,long,alt
-void cov_m_2_lat_long_alt(const float ref[3], float x, float y, float z, float result[3])
+void cov_m_2_lat_long_alt(double ref[3], float x, float y, float z, double result[3])
 {
-    const double x_rad = (double)x / CONSTANTS_RADIUS_OF_EARTH;
-    const double y_rad = (double)y / CONSTANTS_RADIUS_OF_EARTH;
-    const double c = sqrt(x_rad * x_rad + y_rad * y_rad);
 
-    if (fabs(c) > 0)
+    if (x == 0 && y == 0)
     {
-        const double sin_c = sin(c);
-        const double cos_c = cos(c);
-
-        const double lat_rad = asin(cos_c * sin(ref[0]) + (x_rad * sin_c * cos(ref[0])) / c);
-        const double lon_rad = (deg_2_rad(ref[1]) + atan2(y_rad * sin_c, c * cos(ref[0]) * cos_c - x_rad * sin(ref[0]) * sin_c));
-
-        result[0] = rad_2_deg(lat_rad); //ref,result---lat,long,alt
-        result[1] = rad_2_deg(lon_rad);
+        result[0] = ref[0];
+        result[1] = ref[1];
     }
     else
     {
-        result[0] = rad_2_deg(ref[0]);
-        result[1] = rad_2_deg(ref[1]);
+        double local_radius = cos(ref[1]) * EARTH_RADIUS;
+
+        result[0] = ref[0] + rad_2_deg(y / local_radius);
+
+        result[1] = ref[1] + rad_2_deg(x / EARTH_RADIUS);
     }
 
     result[2] = ref[2] + z; //高度
 }
 
-void cov_lat_long_2_m(float a_pos[2], float b_pos[2],double m[2])
+void cov_lat_long_2_m(float a_pos[2], float b_pos[2], double m[2])
 { //参考点是a点，lat，long，alt
     double lat1 = a_pos[0];
     double lon1 = a_pos[1];
@@ -136,15 +130,13 @@ void cov_lat_long_2_m(float a_pos[2], float b_pos[2],double m[2])
     double lat2 = b_pos[0];
     double lon2 = b_pos[1];
 
-
-
     double n_distance = deg_2_rad(lat2 - lat1) * EARTH_RADIUS;
     double r_at_ref1 = cos(lat1) * EARTH_RADIUS;
 
-    double e_distance = deg_2_rad(lon2-lon1)*r_at_ref1;
-    
-    m[0]=n_distance;
-    m[1]=e_distance;
+    double e_distance = deg_2_rad(lon2 - lon1) * r_at_ref1;
+
+    m[0] = n_distance;
+    m[1] = e_distance;
 }
 
 #endif
