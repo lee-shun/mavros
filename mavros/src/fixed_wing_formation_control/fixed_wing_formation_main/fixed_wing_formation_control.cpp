@@ -146,7 +146,7 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<mavros_msgs::VFR_HUD> //
           ("/mavros/vfr_hud", 10, &_FIXED_WING_SUB_PUB::air_ground_speed_from_px4_cb, fixed_wing_sub_pub_poiter);
 
-    fixed_wing_states_tran_sub //订阅空速、地速
+    fixed_wing_states_tran_sub                            //订阅空速、地速
         = nh.subscribe<mavros_msgs::Formation_fixed_wing> //
           ("/mavros/fixed_wing_formation/status", 10, &_FIXED_WING_SUB_PUB::fixed_wing_states_tran_cb, fixed_wing_sub_pub_poiter);
 
@@ -366,9 +366,15 @@ void _FIXED_WING_FORMATION_CONTROL::show_fixed_wing_setpoint(int PlaneID)
     cout << "***************以下是" << PlaneID << "号飞机期望值******************" << endl;
     cout << "Time: " << current_time << " [s] " << endl;
     cout << "Mode : [ " << p->mode << " ]" << endl;
-
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
+
+    cout << "飞机期望位置gps【lat,long,alt】" << p->latitude << " [] "
+         << p->longtitude << " [] "
+         << p->altitude << " [] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
     cout << "飞机期望高度与期望空速【altitude(absolute),airspeed】" << p->altitude << " [m] "
          << p->air_speed << " [m/s] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
@@ -402,9 +408,24 @@ void _FIXED_WING_FORMATION_CONTROL::show_control_state(_FIXED_WING_SUB_PUB *fixe
 
 bool _FIXED_WING_FORMATION_CONTROL::update_leader_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
+    //空速
     leader_status.air_speed = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.air_speed;
 
-    cout<<"leader_status.air_speed"<<leader_status.air_speed<<endl;
+    //位置，gps
+    leader_status.latitude = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.latitude;
+
+    leader_status.longtitude = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.longtitude;
+
+    leader_status.altitude = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.altitude;
+
+    //地速
+    leader_status.ned_vel_x = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.ned_vel_x;
+
+    leader_status.ned_vel_y = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.ned_vel_y;
+
+    leader_status.ned_vel_z = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.ned_vel_z;
+
+    cout << "leader_status.air_speed" << leader_status.air_speed << endl;
 }
 bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
@@ -503,9 +524,9 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     calculate_error(); //计算一下距离error，得到地速期望,以及ned速度误差
 
-    follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_follwer1.distance_3d;
+    follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_follwer1.distance_level;
 
-    follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_follwer1.distance_3d;
+    follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_follwer1.distance_level;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_error()
@@ -532,7 +553,40 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
                                       error_follwer1.distance_level * error_follwer1.distance_level);
 
     error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_setpoint.ned_vel_x;
+
     error_follwer1.ned_vel_y = leader_status.ned_vel_y - follower_setpoint.ned_vel_y;
+}
+
+void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
+{
+    _s_error_followern *p;
+
+    p = &error_follwer1;
+
+    cout << "***************以下是" << PlaneID << "号飞机编队误差******************" << endl;
+    cout << "***************以下是" << PlaneID << "号飞机编队误差******************" << endl;
+    cout << "Time: " << current_time << " [s] " << endl;
+
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
+    cout << "飞机位置gps误差【lat,long,alt】" << p->latitude << " [] "
+         << p->longtitude << " [] "
+         << p->altitude << " [] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
+    cout << "飞机ned_vel误差【n,e】" << p->ned_vel_x << " [] "
+         << p->ned_vel_y << " [] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+
+    cout << "飞机距离误差【n,e，level，3d】" << p->n_diatance << " [] "
+         << p->e_distance << " [] "
+         << p->distance_level << " [] "
+         << p->distance_3d << " [] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_the_desire_airspeed()
@@ -570,7 +624,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
         params.climboutdem = false;
     }
 
-    //calculate_the_desire_airspeed();
+    calculate_the_desire_airspeed();
 
     _tecs.update_state(current_time, follower_status.altitude,
                        follower_status.air_speed, follower_status.rotmat,
@@ -636,10 +690,10 @@ void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 {
     //
-    float delat_a_n = -control_lateral_params.kp * error_follwer1.n_diatance - control_lateral_params.kd * error_follwer1.ned_vel_x;
-    float delat_a_e = -control_lateral_params.kp * error_follwer1.e_distance - control_lateral_params.kd * error_follwer1.ned_vel_y;
+    float delat_a_n = control_lateral_params.kp * error_follwer1.n_diatance + control_lateral_params.kd * error_follwer1.ned_vel_x;
+    float delat_a_e = control_lateral_params.kp * error_follwer1.e_distance + control_lateral_params.kd * error_follwer1.ned_vel_y;
 
-    follower_setpoint.ned_acc_x = delat_a_n + leader_status.ned_acc_x;
+    follower_setpoint.ned_acc_x = delat_a_n + leader_status.ned_acc_x; //测试时领机的加速度为0
     follower_setpoint.ned_acc_y = delat_a_e + leader_status.ned_acc_y;
 
     //将ned下的加速度期望值转换到体轴系下
@@ -651,7 +705,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 
     //去掉x方向的加速度，利用协调转弯，计算滚转角期望值
 
-    follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -0.5, 0.5); //atan返回的是弧度制下的-90到90
+    follower_setpoint.roll_angle = constrain(atan(follower_setpoint.body_acc_y / CONSTANTS_ONE_G), -1, 1); //atan返回的是弧度制下的-90到90
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
@@ -670,6 +724,14 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_leader_status(&fixed_wing_sub_pub);
 
+        show_fixed_wing_status(2);
+
+        foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
+
+        show_formation_error(2);//上一步计算的误差打印一下
+
+        show_fixed_wing_setpoint(2); //打印从机期望值
+
         if (follower_status.mode != "OFFBOARD")
         {
             cout << "当前不是OFFBOARD,请用遥控器切换,不进行控制，监视模式" << endl;
@@ -677,8 +739,6 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             cout << "|             |             |" << endl;
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
-            show_fixed_wing_status(2);
-            //show_fixed_wing_status(1);
         }
 
         else
@@ -688,24 +748,14 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             cout << "|             |             |" << endl;
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
-            show_fixed_wing_status(2);
-
-            //从机的期望值从这里开始被赋值
-            test(); //在这里面将期望高度，期望空速赋值
-
-            //foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
 
             control_vertical(current_time); //控制高度，空速
 
-            //control_lateral(current_time); //控制水平位置（速度方向）
+            control_lateral(current_time); //控制水平位置（速度方向）
 
-            show_tecs_status();
-
-            show_fixed_wing_setpoint(2); //打印从机期望值
+            //show_tecs_status();
 
             send_setpoint_to_px4(&fixed_wing_sub_pub);
-
-            control_formation();
 
             send_setpoint_to_ground_station();
         }

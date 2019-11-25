@@ -30,11 +30,14 @@ void VIR_LEADER::run(int argc, char **argv)
     begin_time = ros::Time::now(); // 记录启控时间
     ros_sub_pub();
 
+    fixed_wing_sub_pub.fixed_wing_states_tran.air_speed = 16;
+
     fixed_wing_sub_pub.fixed_wing_states_tran.latitude = LEADER_HOME_LAT;
     fixed_wing_sub_pub.fixed_wing_states_tran.longtitude = LEADER_HOME_LONG;
     fixed_wing_sub_pub.fixed_wing_states_tran.altitude = LEADER_HOME_ALT;
-    fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_x = 15;
-    fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y = 0;
+    
+    fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_x = 0;
+    fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y = 15;
     fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_z = 0;
 
     double ref[3];
@@ -45,7 +48,7 @@ void VIR_LEADER::run(int argc, char **argv)
 
         current_time = fixed_wing_sub_pub.get_ros_time(begin_time);
 
-        distance_e = fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_x * (current_time - last_time);
+        distance_e = fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y * (current_time - last_time);
         cout << "distance" << distance_e << endl;
         //以home点，每秒15m向东飞
         //lat为经度，东经西经，long为纬度，南纬北纬

@@ -303,7 +303,7 @@ private:
 
 	struct _s_formation_params
 	{
-		float v_kp{0};
+		float v_kp{0.1};
 
 		float altitude_offset{0};
 
@@ -319,7 +319,8 @@ private:
 
 	struct _s_control_lateral_params
 	{
-		float kp{0};
+		float kp{0.1};
+
 		float kd{0};
 	} control_lateral_params;
 
@@ -367,6 +368,8 @@ public:
 	void send_setpoint_to_ground_station();
 
 	void calculate_error();
+
+	void show_formation_error(int PlaneID);
 
 	void foramtion_demands_update(int formation_type);
 
