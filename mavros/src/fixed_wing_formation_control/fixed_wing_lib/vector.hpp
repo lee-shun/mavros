@@ -10,20 +10,18 @@ typedef Point Vec;
 class Point
 {
 private:
+public:
     float x;
     float y;
 
-public:
-    Point(float in_x, float in_y)
-    {
-        x = in_x;
-        y = in_y;
-    }
+    Point(double _x = 0, double _y = 0) : x(_x), y(_y) {}
+
     ~Point() {}
 
     //向量与常数 注意常数要放在后面
     Vec operator*(double p) { return Vec(x * p, y * p); }
     Vec operator/(double p) { return Vec(x / p, y / p); }
+    Vec operator-() { return Vec(-x, -y); }
     Vec operator-(Vec obj) { return Vec(x - obj.x, y - obj.y); }
     Vec operator+(Vec obj) { return Vec(x + obj.x, y + obj.y); }
 
@@ -53,6 +51,9 @@ public:
 
     double len2() { return x * x + y * y; }
 
+    //归一化
+    Vec normalized() { return Vec((*this).x, (*this).y) / (*this).len(); }
+
     //返回两点之间的距离
     double dis(Point obj) { return hypot(x - obj.x, y - obj.y); } //hypot 给定直角三角形的两条直角边，返回斜边边长
 
@@ -76,7 +77,14 @@ public:
 
     void print()
     {
-        cout <<"my_x ="<<x<<"  "<<"my_y ="<<y<<endl;
+        cout << "my_x =" << x << "  "
+             << "my_y =" << y << endl;
+    }
+
+    void set_vec_ele(float a, float b)
+    {
+        x = a;
+        y = b;
     }
 };
 

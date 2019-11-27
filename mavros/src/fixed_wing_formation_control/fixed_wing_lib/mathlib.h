@@ -4,6 +4,7 @@
 #define PI 3.1415926535
 #define CONSTANTS_RADIUS_OF_EARTH 6371000
 #define EARTH_RADIUS 6378137
+#define CONSTANTS_ONE_G 9.80665
 
 float constrain(float val, float min, float max)
 {

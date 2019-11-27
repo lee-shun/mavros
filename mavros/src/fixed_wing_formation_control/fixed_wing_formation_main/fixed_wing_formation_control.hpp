@@ -16,6 +16,7 @@
 #include "../fixed_wing_lib/vector.hpp"
 #include "../fixed_wing_lib/mathlib.h"
 #include "../fixed_wing_lib/tecs.hpp"
+#include "../fixed_wing_lib/lateral_controller.hpp"
 
 using namespace std;
 
@@ -32,6 +33,8 @@ private:
 	_FIXED_WING_SUB_PUB fixed_wing_sub_pub;
 
 	TECS _tecs;
+
+	LATERAL_CONTROLLER _lateral_controller;
 
 	struct TECS::tecs_state tecs_outputs;
 
@@ -324,13 +327,6 @@ private:
 
 	string control_mode_current;
 
-	struct _s_control_lateral_params
-	{
-		float kp{0.1};
-
-		float kd{0.1};
-	} control_lateral_params;
-
 public:
 	void write_to_files(string file_path_name, float time_stamp, float data);
 
@@ -388,7 +384,7 @@ public:
 
 	void control_lateral(float current_time);
 
-	void control_lateral2(float current_time);//另一种控制方法
+	void update_the_vectors_for_lateral();
 };
 
 #endif

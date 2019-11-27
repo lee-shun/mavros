@@ -696,12 +696,12 @@ void _FIXED_WING_FORMATION_CONTROL::show_tecs_status()
 
 void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 {
+    Point curr_pos(follower_status.latitude, follower_status.longtitude);
+    Point sp_pos(follower_setpoint.latitude, follower_setpoint.longtitude);
+    Point ground_speed_2d(follower_status.ned_vel_x, follower_status.ned_vel_y);
     //这里调用control_lateral函数，先构建输入，再写内部
-}
 
-void _FIXED_WING_FORMATION_CONTROL::control_lateral2(float current_time)
-{
-    //这里调用control_lateral函数，先构建输入，再写内部
+    _lateral_controller.lateral_L1_modified(curr_pos, sp_pos, ground_speed_2d, follower_status.air_speed);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
@@ -752,7 +752,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             current_time = get_ros_time(begin_time);
 
             //control_lateral(current_time); //控制水平位置（速度方向）
-            control_lateral2(current_time); //控制水平位置（速度方向）
+
             //show_tecs_status();
 
             send_setpoint_to_px4(&fixed_wing_sub_pub);
