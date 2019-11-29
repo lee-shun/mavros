@@ -18,6 +18,8 @@ using namespace std;
 class LATERAL_CONTROLLER
 {
 private:
+    /***********************************魔改L1控制器函数***************************************/
+    /***********************************魔改L1控制器函数***************************************/
     float acc_lateral{0};
 
     float _nav_bearing;
@@ -30,13 +32,13 @@ private:
 
     float roll_sp{0};
 
-    float _L1_period;
+    float _L1_period{25};
 
-    float _L1_ratio;
+    float _L1_ratio{5.0};
 
-    float _L1_damping;
+    float _L1_damping{0.75};
 
-    float _L1_distance{20};
+    float _L1_distance{20.0};
 
     struct _s_control_lateral_params
     {
@@ -45,7 +47,30 @@ private:
         float kd{0.1};
     } control_lateral_params;
 
+    float track_vel_k{1};
+    /***********************************魔改L1控制器函数***************************************/
+    /***********************************魔改L1控制器函数***************************************/
+
+    ///////////速度追踪法/////////////
+
+    ///////////速度追踪法/////////////
+
 public:
+    ///////////视线与速度夹角控制/////////////
+    void lateral_yaw();
+
+    ///////////视线与速度夹角速率控制/////////////
+    void lateral_yaw_rate();
+
+    ///////////滑膜控制/////////////
+    void lateral_sliding_mode();
+
+    /***********************************魔改L1控制器函数***************************************/
+    /***********************************魔改L1控制器函数***************************************/
+    void lateral_L1_modified(Point curr_pos, Point sp_pos, Point ground_speed_2d, float airspeed);
+
+    Point get_local_planar_vector(Point origin, Point target);
+
     float get_lateral_roll_sp()
     {
         return roll_sp;
@@ -56,19 +81,6 @@ public:
         return acc_lateral;
     }
 
-    void lateral_L1_modified(Point curr_pos, Point sp_pos, Point ground_speed_2d, float airspeed);
-
-    void lateral_yaw_rate();
-
-    void lateral_yaw();
-
-    void lateral_sliding_mode();
-
-    Point get_local_planar_vector(Point origin, Point target);
-
-    /**
-	 * Set the L1 period.
-	 */
     void set_l1_period(float period)
     {
         _L1_period = period;
@@ -84,10 +96,7 @@ public:
         /* calculate the L1 gain (following [2]) */
         _K_L1 = 4.0f * _L1_damping * _L1_damping;
     }
-    /**
-	 * Set the maximum roll angle output in radians
-	 *
-	 */
+
     void set_l1_roll_limit(float roll_lim_rad)
     {
         _roll_lim_rad = roll_lim_rad;
@@ -109,6 +118,12 @@ public:
     {
         return _nav_bearing;
     }
+    /***********************************魔改L1控制器函数***************************************/
+    /***********************************魔改L1控制器函数***************************************/
+
+    ///////////速度追踪法/////////////
+    void track_velocity(Point curr_pos, Point sp_pos, Point ground_speed_2d, Point sp_speed_2d);
+    ///////////速度追踪法/////////////
 };
 
 void LATERAL_CONTROLLER::lateral_yaw()
@@ -188,7 +203,48 @@ void LATERAL_CONTROLLER::lateral_yaw_rate()
     // last_time_lateral = current_time;
 }
 
-void LATERAL_CONTROLLER::lateral_L1_modified(Point curr_pos, Point sp_pos, Point ground_speed_2d, float airspeed)
+//速度追踪法（看导弹飞行力学）
+void LATERAL_CONTROLLER::track_velocity(Point curr_pos, Point sp_pos, Point ground_speed_2d, Point target_speed_2d)
+{
+    Point vector_curr_position = curr_pos;
+    Point vector_A = sp_pos;
+
+    /* enforce a minimum ground speed of 0.1 m/s to avoid singularities */
+    float ground_speed = max(ground_speed_2d.len(), 0.1f);
+
+    /* 计算目标点到飞机的向量，ned */
+    Point vector_A_to_airplane = get_local_planar_vector(vector_A, vector_curr_position); //A-->P
+    cout << "vector_A_to_airplane.x == " << vector_A_to_airplane.x << endl;
+    cout << "vector_A_to_airplane.y == " << vector_A_to_airplane.y << endl;
+
+    float r = vector_A_to_airplane.len(); //A-->P的长度，r
+    float v = ground_speed_2d.len();      //自己的速度（标量）
+    float vt = target_speed_2d.len();         //目标的速度（标量）（领机的，也是目标位置的速度，因为要编队）
+
+    cout << "r == " << r << endl;
+    cout << "v == " << v << endl;
+    cout << "vt == " << vt << endl;
+    //cout << "vector_A_to_airplane.y == " << vector_A_to_airplane.y << endl;
+
+    Point grou_speed_unit = ground_speed_2d.normalized();
+    Point sp_speed_unit = target_speed_2d.normalized();
+
+    cout << "grou_speed_unit.x " << grou_speed_unit.x << endl;
+    cout << "grou_speed_unit.y " << grou_speed_unit.y << endl;
+    cout << "sp_speed_unit.x " << sp_speed_unit.x << endl;
+    cout << "sp_speed_unit.y " << sp_speed_unit.y << endl;
+
+    float sin_q = grou_speed_unit ^ sp_speed_unit; //计算出两个速度的夹角的sin_q
+    cout << "sin_q" << sin_q << endl;
+
+    _lateral_accel = track_vel_k * (v * vt * sin_q) / r;
+    cout << "_lateral_accel" << _lateral_accel << endl;
+    //
+}
+
+////////魔改l1控制器
+void LATERAL_CONTROLLER::lateral_L1_modified(Point curr_pos, Point sp_pos,
+                                             Point ground_speed_2d, float airspeed)
 {
     //使用的是魔改的l1控制器，此中的l1_distance就是飞机与期望点的连线
     /* 创建三个变量，分别代表当前速度与L1方向的夹角；与期望航线垂起方向的位置差；在期望航向上的位置差 */
@@ -203,21 +259,35 @@ void LATERAL_CONTROLLER::lateral_L1_modified(Point curr_pos, Point sp_pos, Point
     /* enforce a minimum ground speed of 0.1 m/s to avoid singularities */
     float ground_speed = max(ground_speed_2d.len(), 0.1f);
 
+    cout << "ground_speed == " << ground_speed << endl;
+
     _L1_distance = _L1_ratio * ground_speed;
+
+    cout << "_L1_distance == " << _L1_distance << endl;
 
     /* 计算目标点到飞机的向量，ned */
     Point vector_A_to_airplane = get_local_planar_vector(vector_A, vector_curr_position);
 
     /* calculate eta to fly to waypoint A */
+    cout << "vector_A_to_airplane.x == " << vector_A_to_airplane.x << endl;
+    cout << "vector_A_to_airplane.y == " << vector_A_to_airplane.y << endl;
 
     /* unit vector from waypoint A to current position */
     Point vector_A_to_airplane_unit = vector_A_to_airplane.normalized();
+
+    cout << "vector_A_to_airplane_unit.x == " << vector_A_to_airplane_unit.x << endl;
+    cout << "vector_A_to_airplane_unit.y == " << vector_A_to_airplane_unit.y << endl;
+
     /* velocity across / orthogonal to line */
     xtrack_vel = ground_speed_2d ^ (-vector_A_to_airplane_unit);
     /* velocity along line */
     ltrack_vel = ground_speed_2d * (-vector_A_to_airplane_unit);
 
+    cout << "xtrack_vel == " << xtrack_vel << endl;
+    cout << "ltrack_vel == " << ltrack_vel << endl;
+
     eta = atan2f(xtrack_vel, ltrack_vel);
+    cout << "eta == " << rad_2_deg(eta) << endl;
     /* bearing from current position to L1 point */
     _nav_bearing = atan2f(-vector_A_to_airplane_unit.y, -vector_A_to_airplane_unit.x);
 
@@ -225,16 +295,19 @@ void LATERAL_CONTROLLER::lateral_L1_modified(Point curr_pos, Point sp_pos, Point
     eta = constrain(eta, (-PI) / 2.0f, +PI / 2.0f);
     /* 计算切向加速度 */
     _lateral_accel = _K_L1 * ground_speed * ground_speed / _L1_distance * sinf(eta);
+
+    cout << "_lateral_accel == " << _lateral_accel << endl;
 }
 
 Point LATERAL_CONTROLLER::get_local_planar_vector(Point origin, Point target)
 {
     /* this is an approximation for small angles, proposed by [2] */
 
-    Point out(deg_2_rad((target.x - origin.x)), deg_2_rad((target.y - origin.y * cosf(deg_2_rad(origin.x)))));
+    Point out(deg_2_rad((target.x - origin.x)), deg_2_rad((target.y - origin.y) * cosf(deg_2_rad(origin.x))));
 
     return out * double(CONSTANTS_RADIUS_OF_EARTH);
 }
+////////魔改l1控制器
 
 void LATERAL_CONTROLLER::lateral_sliding_mode()
 {
