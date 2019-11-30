@@ -232,15 +232,28 @@ void _FIXED_WING_FORMATION_CONTROL::send_setpoint_to_ground_station()
 
 void _FIXED_WING_FORMATION_CONTROL::test()
 {
+    //这里差分一下看看领机速度
+    float dt = current_time - last_time_test;
+    test_leader_vel.current_pos[0] = follower_setpoint.latitude;
+    test_leader_vel.current_pos[1] = follower_setpoint.longtitude;
 
-    //当前是屏蔽角速度控制的mavros
-    follower_setpoint.roll_angle = 0.3;
+    double m[2];
 
-    follower_setpoint.yaw_angle = 0.2;
-    //将期望高度和期望空速赋值
-    follower_setpoint.air_speed = 15;
+    cov_lat_long_2_m(test_leader_vel.last_pos, test_leader_vel.current_pos, m);
 
-    follower_setpoint.altitude = 580.0;
+    float vel_n_cha = m[0] / dt;
+    float vel_e_cha = m[1] / dt;
+
+    cout << "差分速度 n，e = " << vel_n_cha << "m/s"
+         << "    " << vel_e_cha << "m/s" << endl;
+    
+    if (test_leader_vel.last_pos[0] != test_leader_vel.current_pos[0])
+    {
+        test_leader_vel.last_pos[0] = test_leader_vel.current_pos[0]; //lat
+        test_leader_vel.last_pos[1] = test_leader_vel.current_pos[1]; //long
+    }
+
+    last_time_test = current_time;
 }
 
 bool _FIXED_WING_FORMATION_CONTROL::set_fixed_wing_mode(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer, string setpoint_mode)
@@ -424,8 +437,6 @@ bool _FIXED_WING_FORMATION_CONTROL::update_leader_status(_FIXED_WING_SUB_PUB *fi
     leader_status.ned_vel_y = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.ned_vel_y;
 
     leader_status.ned_vel_z = fixed_wing_sub_pub_pointer->fixed_wing_states_tran.ned_vel_z;
-
-    cout << "leader_status.latitude = " << leader_status.latitude << endl;
 }
 bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
@@ -522,6 +533,8 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     follower_setpoint.longtitude = leader_status.longtitude + formation_params.longtitude_offset;
 
+    test(); //显示差分速度
+
     calculate_error(); //计算一下距离error，得到地速期望,以及ned速度误差
 
     follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_follwer1.distance_level;
@@ -591,6 +604,9 @@ void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
          << p->distance_3d << " [] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
+
+    cout << "***************以上是" << PlaneID << "号飞机编队误差******************" << endl;
+    cout << "***************以上是" << PlaneID << "号飞机编队误差******************" << endl;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_the_desire_airspeed()

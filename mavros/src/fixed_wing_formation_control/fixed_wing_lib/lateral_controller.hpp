@@ -219,7 +219,7 @@ void LATERAL_CONTROLLER::track_velocity(Point curr_pos, Point sp_pos, Point grou
 
     float r = vector_A_to_airplane.len(); //A-->P的长度，r
     float v = ground_speed_2d.len();      //自己的速度（标量）
-    float vt = target_speed_2d.len();         //目标的速度（标量）（领机的，也是目标位置的速度，因为要编队）
+    float vt = target_speed_2d.len();     //目标的速度（标量）（领机的，也是目标位置的速度，因为要编队）
 
     cout << "r == " << r << endl;
     cout << "v == " << v << endl;
@@ -259,35 +259,35 @@ void LATERAL_CONTROLLER::lateral_L1_modified(Point curr_pos, Point sp_pos,
     /* enforce a minimum ground speed of 0.1 m/s to avoid singularities */
     float ground_speed = max(ground_speed_2d.len(), 0.1f);
 
-    cout << "ground_speed == " << ground_speed << endl;
+    //cout << "ground_speed == " << ground_speed << endl;
 
     _L1_distance = _L1_ratio * ground_speed;
 
-    cout << "_L1_distance == " << _L1_distance << endl;
+    //cout << "_L1_distance == " << _L1_distance << endl;
 
     /* 计算目标点到飞机的向量，ned */
     Point vector_A_to_airplane = get_local_planar_vector(vector_A, vector_curr_position);
 
     /* calculate eta to fly to waypoint A */
-    cout << "vector_A_to_airplane.x == " << vector_A_to_airplane.x << endl;
-    cout << "vector_A_to_airplane.y == " << vector_A_to_airplane.y << endl;
+    //cout << "vector_A_to_airplane.x == " << vector_A_to_airplane.x << endl;
+    //cout << "vector_A_to_airplane.y == " << vector_A_to_airplane.y << endl;
 
     /* unit vector from waypoint A to current position */
     Point vector_A_to_airplane_unit = vector_A_to_airplane.normalized();
 
-    cout << "vector_A_to_airplane_unit.x == " << vector_A_to_airplane_unit.x << endl;
-    cout << "vector_A_to_airplane_unit.y == " << vector_A_to_airplane_unit.y << endl;
+    //cout << "vector_A_to_airplane_unit.x == " << vector_A_to_airplane_unit.x << endl;
+    //cout << "vector_A_to_airplane_unit.y == " << vector_A_to_airplane_unit.y << endl;
 
     /* velocity across / orthogonal to line */
     xtrack_vel = ground_speed_2d ^ (-vector_A_to_airplane_unit);
     /* velocity along line */
     ltrack_vel = ground_speed_2d * (-vector_A_to_airplane_unit);
 
-    cout << "xtrack_vel == " << xtrack_vel << endl;
-    cout << "ltrack_vel == " << ltrack_vel << endl;
+    //cout << "xtrack_vel == " << xtrack_vel << endl;
+    //cout << "ltrack_vel == " << ltrack_vel << endl;
 
     eta = atan2f(xtrack_vel, ltrack_vel);
-    cout << "eta == " << rad_2_deg(eta) << endl;
+    //cout << "eta == " << rad_2_deg(eta) << endl;
     /* bearing from current position to L1 point */
     _nav_bearing = atan2f(-vector_A_to_airplane_unit.y, -vector_A_to_airplane_unit.x);
 
@@ -296,7 +296,7 @@ void LATERAL_CONTROLLER::lateral_L1_modified(Point curr_pos, Point sp_pos,
     /* 计算切向加速度 */
     _lateral_accel = _K_L1 * ground_speed * ground_speed / _L1_distance * sinf(eta);
 
-    cout << "_lateral_accel == " << _lateral_accel << endl;
+    //cout << "_lateral_accel == " << _lateral_accel << endl;
 }
 
 Point LATERAL_CONTROLLER::get_local_planar_vector(Point origin, Point target)

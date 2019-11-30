@@ -40,7 +40,9 @@ private:
 
 	float current_time{0};
 
-	float last_time_lateral{0};
+	float last_time_control_lateral{0};
+
+	float last_time_test{0};
 
 	ros::NodeHandle nh;
 
@@ -315,7 +317,7 @@ private:
 
 	struct _s_formation_params
 	{
-		float v_kp{0.2};
+		float v_kp{0.4};
 
 		double altitude_offset{0};
 
@@ -324,6 +326,13 @@ private:
 		double latitude_offset{0};
 
 	} formation_params;
+
+	struct _s_test
+	{
+		double last_pos[2];
+		double current_pos[2];
+
+	} test_leader_vel;
 
 	string control_mode_prev;
 
