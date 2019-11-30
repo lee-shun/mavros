@@ -140,13 +140,13 @@ private:
 
 		float wind_estimate_z{-20000};
 
-		float relative_hight{-20000};
+		double relative_hight{-20000};
 
-		float latitude{-20000};
+		double latitude{-20000};
 
-		float altitude{-20000};
+		double altitude{-20000};
 
-		float longtitude{-20000};
+		double longtitude{-20000};
 
 		float relative_alt{-20000};
 
@@ -212,13 +212,13 @@ private:
 
 		float relative_hight{0};
 
-		float latitude{0};
+		double latitude{0};
 
-		float altitude{0};
+		double altitude{0};
 
-		float longtitude{0};
+		double longtitude{0};
 
-		float relative_alt{0};
+		double relative_alt{0};
 
 		float ned_pos_x{0};
 
@@ -277,15 +277,17 @@ private:
 		float time_const_throt{1.0};
 
 		float time_const{5.0};
+
+		float roll_max{PI / 2};
 	} params;
 
 	struct _s_error_followern
 	{
-		float latitude{0};
+		double latitude{0};
 
-		float altitude{0};
+		double altitude{0};
 
-		float longtitude{0};
+		double longtitude{0};
 
 		float n_diatance{0};
 
@@ -313,13 +315,13 @@ private:
 
 	struct _s_formation_params
 	{
-		float v_kp{0.1};
+		float v_kp{0.2};
 
-		float altitude_offset{0};
+		double altitude_offset{0};
 
-		float longtitude_offset{0};
+		double longtitude_offset{0};
 
-		float latitude_offset{0};
+		double latitude_offset{0};
 
 	} formation_params;
 

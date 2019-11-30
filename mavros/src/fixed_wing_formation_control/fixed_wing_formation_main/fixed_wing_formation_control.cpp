@@ -531,8 +531,8 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_error()
 {
-    float follwer_pos[2];
-    float follower_sp_pos[2];
+    double follwer_pos[2];
+    double follower_sp_pos[2];
 
     follwer_pos[0] = follower_status.latitude;
     follwer_pos[1] = follower_status.longtitude;
@@ -550,9 +550,6 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
 
     error_follwer1.n_diatance = m[0]; //机载ned
     error_follwer1.e_distance = m[1];
-
-    cout << "北向m[0]" << m[0] << endl;
-    cout << "东乡m[1]" << m[1] << endl;
 
     error_follwer1.distance_level = sqrt((m[0] * m[0] + m[1] * m[1]));
 
@@ -703,7 +700,7 @@ void _FIXED_WING_FORMATION_CONTROL::control_lateral(float current_time)
 
     _lateral_controller.lateral_L1_modified(curr_pos, sp_pos, ground_speed_2d, follower_status.air_speed);
 
-    follower_setpoint.roll_angle = _lateral_controller.nav_roll();
+    follower_setpoint.roll_angle = constrain(_lateral_controller.nav_roll(), -params.roll_max, params.roll_max);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)

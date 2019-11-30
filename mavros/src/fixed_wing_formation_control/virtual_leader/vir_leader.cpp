@@ -7,19 +7,19 @@ void VIR_LEADER::ros_sub_pub()
 
 void VIR_LEADER::show_vir_leader_status()
 {
-    cout << fixed << setprecision(8) << "fixed_wing_states_tran.latitude = " << fixed_wing_sub_pub.fixed_wing_states_tran.latitude << endl
+    cout << fixed << setprecision(10) << "fixed_wing_states_tran.latitude = " << fixed_wing_sub_pub.fixed_wing_states_tran.latitude << endl
          << endl
          << endl;
 
-    cout << fixed << setprecision(8) << "fixed_wing_states_tran.longtitude = " << fixed_wing_sub_pub.fixed_wing_states_tran.longtitude << endl
+    cout << fixed << setprecision(10) << "fixed_wing_states_tran.longtitude = " << fixed_wing_sub_pub.fixed_wing_states_tran.longtitude << endl
          << endl
          << endl;
 
-    cout << fixed << setprecision(8) << "fixed_wing_states_tran.altitiude = " << fixed_wing_sub_pub.fixed_wing_states_tran.altitude << endl
+    cout << fixed << setprecision(10) << "fixed_wing_states_tran.altitiude = " << fixed_wing_sub_pub.fixed_wing_states_tran.altitude << endl
          << endl
          << endl;
 
-    cout << fixed << setprecision(8) << "fixed_wing_states_tran.ned_vel_x = " << fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_x << endl
+    cout << fixed << setprecision(10) << "fixed_wing_states_tran.ned_vel_y = " << fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y << endl
          << endl
          << endl;
 }
@@ -35,9 +35,9 @@ void VIR_LEADER::run(int argc, char **argv)
     fixed_wing_sub_pub.fixed_wing_states_tran.latitude = LEADER_HOME_LAT;
     fixed_wing_sub_pub.fixed_wing_states_tran.longtitude = LEADER_HOME_LONG;
     fixed_wing_sub_pub.fixed_wing_states_tran.altitude = LEADER_HOME_ALT;
-    
+
     fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_x = 0;
-    fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y = 15;
+    fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y = 10;
     fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_z = 0;
 
     double ref[3];
@@ -50,7 +50,7 @@ void VIR_LEADER::run(int argc, char **argv)
 
         distance_e = fixed_wing_sub_pub.fixed_wing_states_tran.ned_vel_y * (current_time - last_time);
         cout << "distance" << distance_e << endl;
-        //以home点，每秒15m向东飞
+        //以home点，每秒15m向西飞
         //lat为经度，东经西经，long为纬度，南纬北纬
         //当前位置作为参考点
         ref[0] = fixed_wing_sub_pub.fixed_wing_states_tran.latitude;
@@ -62,6 +62,21 @@ void VIR_LEADER::run(int argc, char **argv)
         fixed_wing_sub_pub.fixed_wing_states_tran.latitude = result[0];
         fixed_wing_sub_pub.fixed_wing_states_tran.longtitude = result[1];
         fixed_wing_sub_pub.fixed_wing_states_tran.altitude = result[2];
+
+        double ref1[2], result1[2], m[2];
+
+        ref1[0] = ref[0];
+        ref1[1] = ref[1];
+        result1[0] = result[0];
+        result1[1] = result[1];
+        //差分速度
+        cov_lat_long_2_m(ref1, result1, m);
+
+        float vel_n_cha = m[0] / (current_time - last_time);
+        float vel_e_cha = m[1] / (current_time - last_time);
+
+        cout << "查分速度 n，e" << vel_n_cha << "m/s"
+             << "    " << vel_e_cha << "m/s" << endl;
 
         show_vir_leader_status();
 

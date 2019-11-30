@@ -1,6 +1,10 @@
 #ifndef _MATHLIB_H_
 #define _MATHLIB_H_
 #include <math.h>
+#include <iostream>
+
+using namespace std;
+
 #define PI 3.1415926535
 #define CONSTANTS_RADIUS_OF_EARTH 6371000
 #define EARTH_RADIUS 6378137
@@ -113,17 +117,17 @@ void cov_m_2_lat_long_alt(double ref[3], float x, float y, float z, double resul
     }
     else
     {
-        double local_radius = cos(ref[1]) * EARTH_RADIUS;
+        double local_radius = cos(deg_2_rad(ref[0])) * EARTH_RADIUS; //lat是
 
-        result[0] = ref[0] + rad_2_deg(y / local_radius);
+        result[0] = ref[0] + rad_2_deg(x / EARTH_RADIUS); //得到的是lat，x是北向位置，所以在大圆上
 
-        result[1] = ref[1] + rad_2_deg(x / EARTH_RADIUS);
+        result[1] = ref[1] + rad_2_deg(y / local_radius); //得到的是long，在维度圆上
     }
 
     result[2] = ref[2] + z; //高度
 }
 
-void cov_lat_long_2_m(float a_pos[2], float b_pos[2], double m[2])
+void cov_lat_long_2_m(double a_pos[2], double b_pos[2], double m[2])
 { //参考点是a点，lat，long，alt
     double lat1 = a_pos[0];
     double lon1 = a_pos[1];
@@ -131,11 +135,11 @@ void cov_lat_long_2_m(float a_pos[2], float b_pos[2], double m[2])
     double lat2 = b_pos[0];
     double lon2 = b_pos[1];
 
-    double n_distance = deg_2_rad(lon2 - lon1) * EARTH_RADIUS; //涉及到ned是向北增加，且纬度向北也增加
+    double n_distance = deg_2_rad(lat2 - lat1) * EARTH_RADIUS; //涉及到ned是向北增加，且纬度向北也增加
 
-    double r_at_ref1 = cos(lat1) * EARTH_RADIUS;
+    double r_at_ref1 = cos(deg_2_rad(lat1)) * EARTH_RADIUS;
 
-    double e_distance = -deg_2_rad(lat2 - lat1) * r_at_ref1; //涉及到ned是向东增加，但是经度向东减少
+    double e_distance = deg_2_rad(lon2 - lon1) * r_at_ref1; //涉及到ned是向东增加，但是经度向东减少
 
     m[0] = n_distance;
     m[1] = e_distance;
