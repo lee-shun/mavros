@@ -8,6 +8,9 @@ void FIXED_WING_MAVLINK::handle_message(mavlink_message_t *msg)
         handle_message_heartbeat(msg);
         break;
 
+        
+        
+        
         // case MAVLINK_MSG_ID_BATTERY_STATUS:
         //     handle_message_battery_status(msg);
         //     break;
