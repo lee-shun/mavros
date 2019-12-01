@@ -537,9 +537,47 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     calculate_error(); //计算一下距离error，得到地速期望,以及ned速度误差
 
-    follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp * error_follwer1.distance_level;
+    if (-3 < error_follwer1.distance_level && error_follwer1.distance_level < 3)
+    //近距离
+    {cout<<"in the 0.05"<<endl;
+        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.05 * error_follwer1.n_distance;
 
-    follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp * error_follwer1.distance_level;
+        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.05 * error_follwer1.e_distance;
+    }
+
+    else if (-10 < error_follwer1.distance_level && error_follwer1.distance_level < 10)
+    //近距离
+    {cout<<"in the 0.0"<<endl;
+        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp1 * error_follwer1.n_distance;
+
+        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp1 * error_follwer1.e_distance;
+    }
+
+    else
+    {
+        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp2 * error_follwer1.distance_level;
+
+        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp2 * error_follwer1.distance_level;
+    }
+
+    //这个地方不好描述，请自行体会,是将v_sp和真实测量的差做了d后再加到v_sp作为输入量
+    // float last_ned_vel_x_error{0},
+    //     last_ned_vel_y_error{0},
+    //     current_ned_vel_x_error{0},
+    //     current_ned_vel_y_error{0};
+
+    // current_ned_vel_x_error = error_follwer1.ned_vel_x;
+    // current_ned_vel_y_error = error_follwer1.ned_vel_y;
+
+    // float d_ned_vel_x_error = (current_ned_vel_x_error - last_ned_vel_x_error) / (current_time - last_time_v_sp);
+    // float d_ned_vel_y_error = (current_ned_vel_y_error - last_ned_vel_y_error) / (current_time - last_time_v_sp);
+
+    // follower_setpoint.ned_vel_x = formation_params.v_error_kd * d_ned_vel_x_error + follower_setpoint.ned_vel_x;
+    // follower_setpoint.ned_vel_y = formation_params.v_error_kd * d_ned_vel_y_error + follower_setpoint.ned_vel_y;
+
+    // last_ned_vel_x_error = current_ned_vel_x_error;
+    // last_ned_vel_y_error = current_ned_vel_y_error;
+    // last_time_v_sp = current_time;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_error()
@@ -561,7 +599,7 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
 
     cov_lat_long_2_m(follwer_pos, follower_sp_pos, m);
 
-    error_follwer1.n_diatance = m[0]; //机载ned
+    error_follwer1.n_distance = m[0]; //机载ned
     error_follwer1.e_distance = m[1];
 
     error_follwer1.distance_level = sqrt((m[0] * m[0] + m[1] * m[1]));
@@ -569,9 +607,9 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
     error_follwer1.distance_3d = sqrt((error_follwer1.altitude * error_follwer1.altitude +
                                        error_follwer1.distance_level * error_follwer1.distance_level));
 
-    error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_setpoint.ned_vel_x;
+    error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_status.ned_vel_x;
 
-    error_follwer1.ned_vel_y = leader_status.ned_vel_y - follower_setpoint.ned_vel_y;
+    error_follwer1.ned_vel_y = leader_status.ned_vel_y - follower_status.ned_vel_y;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
@@ -598,7 +636,7 @@ void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
-    cout << "飞机距离误差【n,e，level，3d】" << p->n_diatance << " [] "
+    cout << "飞机距离误差【n,e，level，3d】" << p->n_distance << " [] "
          << p->e_distance << " [] "
          << p->distance_level << " [] "
          << p->distance_3d << " [] " << endl;

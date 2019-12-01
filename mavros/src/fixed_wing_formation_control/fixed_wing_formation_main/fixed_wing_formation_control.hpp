@@ -44,6 +44,8 @@ private:
 
 	float last_time_test{0};
 
+	float last_time_v_sp{0.0};//为了速度误差--的微分
+
 	ros::NodeHandle nh;
 
 	ros::ServiceClient set_mode_client;
@@ -291,7 +293,7 @@ private:
 
 		double longtitude{0};
 
-		float n_diatance{0};
+		float n_distance{0};
 
 		float e_distance{0};
 
@@ -317,7 +319,11 @@ private:
 
 	struct _s_formation_params
 	{
-		float v_kp{0.2};
+		float v_kp1{0.1};//近距离
+
+		float v_kp2{0.8};//远距离
+
+		float v_error_kd{0.2};
 
 		double altitude_offset{0};
 
