@@ -26,9 +26,9 @@ void FIXED_WING_MAVLINK::handle_message_heartbeat(mavlink_message_t *msg)
 
     /* Accept only heartbeats from GCS or ONBOARD Controller, skip heartbeats from other vehicles */
     //if ((msg->sysid != mavlink_system.sysid && hb.type == MAV_TYPE_GCS) || (msg->sysid == mavlink_system.sysid && hb.type == MAV_TYPE_ONBOARD_CONTROLLER))
-    {
-        cout << "in the handle heartbeat" << endl;
-    }
+    //{
+    cout << "in the handle heartbeat" << endl;
+    //}
 }
 int FIXED_WING_MAVLINK::open_the_seial()
 {
@@ -61,25 +61,31 @@ int FIXED_WING_MAVLINK::open_the_seial()
 }
 void FIXED_WING_MAVLINK::run()
 {
-    nread = sp.available();
 
-    ros::Rate rate(20);
+    ros::Rate rate(1);
 
     int a = open_the_seial();
 
-    while (ros::ok())
+    while (ros::ok() && a)
     {
-        nread = sp.read(buf, nread);
-
-        for (size_t i = 0; i < nread; i++)
+        size_t n = sp.available();
+        if (n != 0)
         {
-            cout <<"hhh"<< hex << (buf[i] & 0xff) << "  ";
-            
-            if (mavlink_parse_char(_channel, buf[i], &msg, &_status))
-            {
-                handle_message(&msg);
-            }
+            uint8_t buffer[1024];
+            //读出数据
+            n = sp.read(buffer, n);
+            mavlink_parse_char(MAVLINK_COMM_0, n, &msg, &_status);
         }
+        // for (int i = 0; i < nread; i++)
+        // {
+
+        //     cout << hex << (buf[i] & 0xff) << "  ";
+
+        //     if (mavlink_parse_char(_channel, buf[i], &msg, &_status))
+        //     {
+        //         handle_message(&msg);
+        //     }
+        // }
 
         ros::spinOnce();
         //挂起一段时间(rate为 50HZ

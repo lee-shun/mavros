@@ -317,7 +317,7 @@ private:
 
 	struct _s_formation_params
 	{
-		float v_kp{0.4};
+		float v_kp{0.2};
 
 		double altitude_offset{0};
 

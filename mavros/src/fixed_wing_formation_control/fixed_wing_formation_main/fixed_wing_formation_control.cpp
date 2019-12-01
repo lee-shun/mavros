@@ -246,7 +246,7 @@ void _FIXED_WING_FORMATION_CONTROL::test()
 
     cout << "差分速度 n，e = " << vel_n_cha << "m/s"
          << "    " << vel_e_cha << "m/s" << endl;
-    
+
     if (test_leader_vel.last_pos[0] != test_leader_vel.current_pos[0])
     {
         test_leader_vel.last_pos[0] = test_leader_vel.current_pos[0]; //lat

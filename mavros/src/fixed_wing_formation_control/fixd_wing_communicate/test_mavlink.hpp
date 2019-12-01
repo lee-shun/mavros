@@ -25,7 +25,7 @@ private:
 
     serial::Serial sp; //创建一个serial类
 
-    size_t nread;
+    int nread;
 
 public:
     int open_the_seial();
