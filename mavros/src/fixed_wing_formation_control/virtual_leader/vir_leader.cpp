@@ -26,7 +26,7 @@ void VIR_LEADER::show_vir_leader_status()
 
 void VIR_LEADER::run(int argc, char **argv)
 {
-    ros::Rate rate(1.0);
+    ros::Rate rate(10);
     begin_time = ros::Time::now(); // 记录启控时间
     ros_sub_pub();
 
@@ -48,7 +48,7 @@ void VIR_LEADER::run(int argc, char **argv)
 
         current_time = fixed_wing_sub_pub.get_ros_time(begin_time);
 
-        distance_e = 10;
+        distance_e = 1;
         cout << "distance" << distance_e << endl;
 
         //当前位置作为参考点

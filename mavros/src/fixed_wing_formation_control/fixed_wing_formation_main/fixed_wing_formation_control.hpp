@@ -321,7 +321,7 @@ private:
 	{
 		float v_kp1{0.1};//近距离
 
-		float v_kp2{0.8};//远距离
+		float v_kp2{0.5};//远距离
 
 		float v_error_kd{0.2};
 

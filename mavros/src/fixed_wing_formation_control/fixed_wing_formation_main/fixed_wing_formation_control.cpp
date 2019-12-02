@@ -539,15 +539,25 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     if (-3 < error_follwer1.distance_level && error_follwer1.distance_level < 3)
     //近距离
-    {cout<<"in the 0.05"<<endl;
+    {
+        cout << "in the 0.03" << endl;
+        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.03 * error_follwer1.n_distance;
+
+        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.03 * error_follwer1.e_distance;
+    }
+    else if (-10 < error_follwer1.distance_level && error_follwer1.distance_level < 10)
+    //近距离
+    {
+        cout << "in the 0.05" << endl;
         follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.05 * error_follwer1.n_distance;
 
         follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.05 * error_follwer1.e_distance;
     }
 
-    else if (-10 < error_follwer1.distance_level && error_follwer1.distance_level < 10)
+    else if (-20 < error_follwer1.distance_level && error_follwer1.distance_level < 20)
     //近距离
-    {cout<<"in the 0.0"<<endl;
+    {
+        cout << "in the 0.1" << endl;
         follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp1 * error_follwer1.n_distance;
 
         follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp1 * error_follwer1.e_distance;
