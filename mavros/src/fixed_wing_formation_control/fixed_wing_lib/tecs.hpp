@@ -1016,7 +1016,7 @@ void TECS::update_pitch_throttle(float time_now, const float rotMat[3][3], float
     /**************************
 	*
 	* 1. 计算当前的空速，对测量到的空速做一个二阶的低通滤波
-    * 2. 将空速的加速度做一个滤波（并不知道是什么滤波）
+    * 2. 将空速的加速度做一个滤波（并不知道是什么滤波）,得到的是空速的变换率
 	*
 	***************************/
     _update_speed(time_now, EAS_dem, indicated_airspeed, _indicated_airspeed_min, _indicated_airspeed_max, EAS2TAS);
