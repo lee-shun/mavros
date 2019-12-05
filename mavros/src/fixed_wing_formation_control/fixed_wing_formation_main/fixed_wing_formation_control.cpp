@@ -820,7 +820,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         {
             cout << "当前不是OFFBOARD,请用遥控器切换,不进行控制，监视模式" << endl;
             cout << "|             |             |" << endl;
-            cout << "|             |             |" << endl;
+            cout << "|            lee            |" << endl;
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
         }
