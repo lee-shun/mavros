@@ -527,95 +527,41 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
         break;
     };
 
+    //期望位置的产生
     follower_setpoint.altitude = leader_status.altitude + formation_params.altitude_offset;
 
     follower_setpoint.latitude = leader_status.latitude + formation_params.latitude_offset;
 
     follower_setpoint.longtitude = leader_status.longtitude + formation_params.longtitude_offset;
 
-    test(); //显示差分速度
+    calculate_follower_error(); //得到从机<<自己的>>误差
+    SPEED_SP::_s_error _error;
+    SPEED_SP::_s_status fol_status, led_status;
+    SPEED_SP::_s_SPEED_SP_status speed_status;
 
-    calculate_error(); //计算一下距离error，得到地速期望,以及ned速度误差
+    _error.distance_3d = error_follwer1.distance_3d;
+    _error.distance_level = error_follwer1.distance_level;
+    _error.e_distance = error_follwer1.e_distance;
+    _error.n_distance = error_follwer1.n_distance;
 
-    if (-3 < error_follwer1.distance_level && error_follwer1.distance_level < 3)
-    //近距离
-    {
-        cout << "in the 0.01" << endl;
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.01 * error_follwer1.n_distance;
+    fol_status.ned_vel_x = follower_status.ned_vel_x;
+    fol_status.ned_vel_y = follower_status.ned_vel_y;
 
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.01 * error_follwer1.e_distance;
-    }
-    else if (-5 < error_follwer1.distance_level && error_follwer1.distance_level < 5)
-    //近距离
-    {
-        cout << "in the 0.03" << endl;
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.03 * error_follwer1.n_distance;
+    led_status.ned_vel_x = leader_status.ned_vel_x;
+    led_status.ned_vel_y = leader_status.ned_vel_y;
 
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.03 * error_follwer1.e_distance;
-    }
-    else if (-10 < error_follwer1.distance_level && error_follwer1.distance_level < 10)
-    //近距离
-    {
-        cout << "in the 0.05" << endl;
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.05 * error_follwer1.n_distance;
+    _speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
 
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.05 * error_follwer1.e_distance;
-    }
-    else if (-15 < error_follwer1.distance_level && error_follwer1.distance_level < 15)
-    //近距离
-    {
-        cout << "in the 0.08" << endl;
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.08 * error_follwer1.n_distance;
+    follower_setpoint.air_speed = _speed_sp.get_airspeed_sp(); //得到了期望的空速
 
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.08 * error_follwer1.e_distance;
-    }
+    speed_status = _speed_sp.get_sp_status();
 
-    else if (-20 < error_follwer1.distance_level && error_follwer1.distance_level < 20)
-    //近距离
-    {
-        cout << "in the 0.1" << endl;
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp1 * error_follwer1.n_distance;
+    follower_setpoint.ned_vel_x = speed_status.ned_vel_x;
 
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp1 * error_follwer1.e_distance;
-    }
-
-    else if (-25 < error_follwer1.distance_level && error_follwer1.distance_level < 25)
-    //近距离
-    {
-        cout << "in the 0.2" << endl;
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + 0.2 * error_follwer1.n_distance;
-
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + 0.2 * error_follwer1.e_distance;
-    }
-
-    else
-    {
-        follower_setpoint.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp2 * error_follwer1.distance_level;
-
-        follower_setpoint.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp2 * error_follwer1.distance_level;
-    }
-
-    //这个地方不好描述，请自行体会,是将v_sp和真实测量的差做了d后再加到v_sp作为输入量
-    // float last_ned_vel_x_error{0},
-    //     last_ned_vel_y_error{0},
-    //     current_ned_vel_x_error{0},
-    //     current_ned_vel_y_error{0};
-
-    // current_ned_vel_x_error = error_follwer1.ned_vel_x;
-    // current_ned_vel_y_error = error_follwer1.ned_vel_y;
-
-    // float d_ned_vel_x_error = (current_ned_vel_x_error - last_ned_vel_x_error) / (current_time - last_time_v_sp);
-    // float d_ned_vel_y_error = (current_ned_vel_y_error - last_ned_vel_y_error) / (current_time - last_time_v_sp);
-
-    // follower_setpoint.ned_vel_x = formation_params.v_error_kd * d_ned_vel_x_error + follower_setpoint.ned_vel_x;
-    // follower_setpoint.ned_vel_y = formation_params.v_error_kd * d_ned_vel_y_error + follower_setpoint.ned_vel_y;
-
-    // last_ned_vel_x_error = current_ned_vel_x_error;
-    // last_ned_vel_y_error = current_ned_vel_y_error;
-    // last_time_v_sp = current_time;
+    follower_setpoint.ned_vel_y = speed_status.ned_vel_y;
 }
 
-void _FIXED_WING_FORMATION_CONTROL::calculate_error()
+void _FIXED_WING_FORMATION_CONTROL::calculate_follower_error()
 {
     double follwer_pos[2];
     double follower_sp_pos[2];
@@ -642,9 +588,9 @@ void _FIXED_WING_FORMATION_CONTROL::calculate_error()
     error_follwer1.distance_3d = sqrt((error_follwer1.altitude * error_follwer1.altitude +
                                        error_follwer1.distance_level * error_follwer1.distance_level));
 
-    error_follwer1.ned_vel_x = leader_status.ned_vel_x - follower_status.ned_vel_x;
-
-    error_follwer1.ned_vel_y = leader_status.ned_vel_y - follower_status.ned_vel_y;
+    //注意这里的速度，只计算自己的，和领机没有关系。
+    error_follwer1.ned_vel_x = follower_setpoint.ned_vel_x - follower_status.ned_vel_x;
+    error_follwer1.ned_vel_y = follower_setpoint.ned_vel_x - follower_status.ned_vel_y;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
@@ -682,13 +628,6 @@ void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
     cout << "***************以上是" << PlaneID << "号飞机编队误差******************" << endl;
 }
 
-void _FIXED_WING_FORMATION_CONTROL::calculate_the_desire_airspeed()
-{
-    //TECS控制的是空速，编队控制是地速，因而用风估计将期望地速转换成期望空速，注意正负号
-    follower_setpoint.air_speed = sqrt((follower_setpoint.ned_vel_x - follower_status.wind_estimate_x) * (follower_setpoint.ned_vel_x - follower_status.wind_estimate_x) +
-                                       (follower_setpoint.ned_vel_y - follower_status.wind_estimate_y) * (follower_setpoint.ned_vel_y - follower_status.wind_estimate_y));
-}
-
 void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
 {
     //不同模式切换的时候需要进行重置tecs
@@ -716,8 +655,6 @@ void _FIXED_WING_FORMATION_CONTROL::control_vertical(float current_time)
     {
         params.climboutdem = false;
     }
-
-    calculate_the_desire_airspeed();
 
     _tecs.update_state(current_time, follower_status.altitude,
                        follower_status.air_speed, follower_status.rotmat,
@@ -810,7 +747,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         //show_fixed_wing_status(2);
 
-        foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望水平位置，即经纬高，以及编队的“地速”
+        foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望位置，期望空速的大小
 
         show_formation_error(2); //上一步计算的误差打印一下
 

@@ -17,6 +17,7 @@
 #include "../fixed_wing_lib/mathlib.h"
 #include "../fixed_wing_lib/tecs.hpp"
 #include "../fixed_wing_lib/lateral_controller.hpp"
+#include "../fixed_wing_lib/speed_sp.hpp"
 
 using namespace std;
 
@@ -32,6 +33,8 @@ private:
 
 	_FIXED_WING_SUB_PUB fixed_wing_sub_pub;
 
+	SPEED_SP _speed_sp;
+
 	TECS _tecs;
 
 	LATERAL_CONTROLLER _lateral_controller;
@@ -44,7 +47,7 @@ private:
 
 	float last_time_test{0};
 
-	float last_time_v_sp{0.0};//为了速度误差--的微分
+	float last_time_v_sp{0.0}; //为了速度误差--的微分
 
 	ros::NodeHandle nh;
 
@@ -285,7 +288,7 @@ private:
 		float roll_max{PI / 2};
 	} params;
 
-	struct _s_error_followern
+	struct _s_error_followern//这里定义的误差和主机无关，只是自己的期望和实际差
 	{
 		double latitude{0};
 
@@ -319,9 +322,9 @@ private:
 
 	struct _s_formation_params
 	{
-		float v_kp1{0.1};//近距离
+		float v_kp1{0.1}; //近距离
 
-		float v_kp2{0.5};//远距离
+		float v_kp2{0.5}; //远距离
 
 		float v_error_kd{0.2};
 
@@ -387,13 +390,11 @@ public:
 
 	void send_setpoint_to_ground_station();
 
-	void calculate_error();
+	void calculate_follower_error();
 
 	void show_formation_error(int PlaneID);
 
 	void foramtion_demands_update(int formation_type);
-
-	void calculate_the_desire_airspeed();
 
 	void control_vertical(float current_time);
 
