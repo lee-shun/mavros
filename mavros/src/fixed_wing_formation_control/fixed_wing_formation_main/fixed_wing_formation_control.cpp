@@ -546,6 +546,8 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     fol_status.ned_vel_x = follower_status.ned_vel_x;
     fol_status.ned_vel_y = follower_status.ned_vel_y;
+    fol_status.wind_x = follower_status.wind_estimate_x;
+    fol_status.wind_y = follower_status.wind_estimate_y;
 
     led_status.ned_vel_x = leader_status.ned_vel_x;
     led_status.ned_vel_y = leader_status.ned_vel_y;
@@ -559,6 +561,10 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
     follower_setpoint.ned_vel_x = speed_status.ned_vel_x;
 
     follower_setpoint.ned_vel_y = speed_status.ned_vel_y;
+
+    error_follwer1.vel_led_fol_x = speed_status.vel_led_fol_x;
+
+    error_follwer1.vel_led_fol_y = speed_status.vel_led_fol_y;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_follower_error()
@@ -612,8 +618,13 @@ void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 
-    cout << "飞机ned_vel误差【n,e】" << p->ned_vel_x << " [] "
+    cout << "飞机自身与期望ned_vel误差【n,e】" << p->ned_vel_x << " [] "
          << p->ned_vel_y << " [] " << endl;
+    for (int i = 1; i <= the_space_between_lines; i++)
+        cout << endl;
+    
+    cout << "飞机与领机ned_vel误差【n,e】" << p->vel_led_fol_x << " [] "
+         << p->vel_led_fol_y << " [] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
 

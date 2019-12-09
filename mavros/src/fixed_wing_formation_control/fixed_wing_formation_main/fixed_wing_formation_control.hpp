@@ -318,6 +318,12 @@ private:
 
 		float ned_vel_y{0};
 
+		float vel_led_fol_x{0};//ned下，领机和从机速度之差，由speed——sp类产生
+
+		float vel_led_fol_y{0};
+
+		float vel_led_fol_z{0};
+
 	} error_follwer1;
 
 	struct _s_formation_params
