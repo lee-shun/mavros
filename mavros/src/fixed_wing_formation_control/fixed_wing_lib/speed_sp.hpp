@@ -115,7 +115,7 @@ private:
 
         float kp_p{0.8}; //从机期望与实际位置误差比例
 
-        float mix_kp{0.8};
+        float mix_kp{0.3};
 
         float mix_kd{0.0};
 
@@ -226,9 +226,11 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
 
     calculated_vel_led_fol(follower_status, leader_status);
 
-    float e_pv_n = formation_params.kp_p * error.n_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_x; //主从机速度误差
+    float e_pv_n = formation_params.kp_p * error.n_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_x; 
     float e_pv_e = formation_params.kp_p * error.e_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_y;
-
+    
+    cout<<"error.n_distance==="<<error.n_distance<<endl;
+    cout<<"error.e_distance==="<<error.e_distance<<endl;
     //pid控制器：抗击分包和pid，增量式pid等等
     n_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
     e_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
@@ -243,8 +245,9 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
 
     SPEED_SP_status.ned_vel_x = n_pid.pid_anti_saturated(current_time, e_pv_n);
 
-    SPEED_SP_status.ned_vel_y = e_pid.pid_anti_saturated(current_time, e_pv_n);
+    SPEED_SP_status.ned_vel_y = e_pid.pid_anti_saturated(current_time, e_pv_e);
 
+    
     cov_gdsp_2_airsp(follower_status);
 
     last_time = current_time;
