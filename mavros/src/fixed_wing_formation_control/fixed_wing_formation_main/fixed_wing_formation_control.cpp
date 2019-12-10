@@ -552,12 +552,25 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
     led_status.ned_vel_x = leader_status.ned_vel_x;
     led_status.ned_vel_y = leader_status.ned_vel_y;
 
-    _speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
+    control_mode_current_sp = follower_status.mode;
+    
+    //如果模式不一致，重置一下空速计算器
+    if (control_mode_current_sp != control_mode_prev_sp)
+    {
+        _speed_sp.re_cal_speed();
+    }
+
+    //_speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
+
+    _speed_sp.update_airspeed_mix_vp(current_time,_error, fol_status, led_status);
 
     follower_setpoint.air_speed = _speed_sp.get_airspeed_sp(); //得到了期望的空速
 
     speed_status = _speed_sp.get_sp_status();
 
+    
+    
+    //空速计算器状态赋值
     follower_setpoint.ned_vel_x = speed_status.ned_vel_x;
 
     follower_setpoint.ned_vel_y = speed_status.ned_vel_y;
@@ -565,6 +578,9 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
     error_follwer1.vel_led_fol_x = speed_status.vel_led_fol_x;
 
     error_follwer1.vel_led_fol_y = speed_status.vel_led_fol_y;
+
+    //为下一次计算做准备
+    control_mode_prev_sp = control_mode_current_sp;
 }
 
 void _FIXED_WING_FORMATION_CONTROL::calculate_follower_error()
@@ -622,7 +638,7 @@ void _FIXED_WING_FORMATION_CONTROL::show_formation_error(int PlaneID)
          << p->ned_vel_y << " [] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)
         cout << endl;
-    
+
     cout << "飞机与领机ned_vel误差【n,e】" << p->vel_led_fol_x << " [] "
          << p->vel_led_fol_y << " [] " << endl;
     for (int i = 1; i <= the_space_between_lines; i++)

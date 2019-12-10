@@ -7,6 +7,7 @@
 #include <iostream>
 #include "mathlib.h"
 #include "vector.hpp"
+#include "pid_controller.hpp"
 
 using namespace std;
 
@@ -77,20 +78,48 @@ public:
 
     void calculated_vel_led_fol(SPEED_SP::_s_status follower_status, SPEED_SP::_s_status leader_status);
 
+    void cov_gdsp_2_airsp(SPEED_SP::_s_status follower_status);
+
     //控制方案：相对位置误差的p控制产生期望速度增量，加到领机的速度之上作为从机的期望速度
     void update_airspeed_pos_p(SPEED_SP::_s_error error, SPEED_SP::_s_status follower_status, SPEED_SP::_s_status leader_status);
 
     //控制方案：相对位置误差,相对速度误差作为总控制误差，将这个error pid之后产生期望速度
-    void update_airspeed_mix_vp(SPEED_SP::_s_error error, SPEED_SP::_s_status follower_status, SPEED_SP::_s_status leader_status);
+    void update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEED_SP::_s_status follower_status, SPEED_SP::_s_status leader_status);
+
+    void re_cal_speed() { reset_cal_speed = true; }
 
 private:
+    PID_CONTROLLER n_pid, e_pid;
+
+    bool first_use{true};
+
+    bool reset_cal_speed{false};
+
+    float current_time{0.0};
+
+    float last_time{0.0};
+
+    float _dt{0.0};
+
+    float integ_e_pv_n{0}; //混合误差积分项
+
+    float integ_e_pv_e{0};
+
     struct _s_formation_params
     {
         float v_kp1{0.1}; //近距离
 
         float v_kp2{0.5}; //远距离
 
-        float v_error_kd{0.2};
+        float kv_p{0.5}; //主从机速度差比例项
+
+        float kp_p{0.8}; //从机期望与实际位置误差比例
+
+        float mix_kp{0.8};
+
+        float mix_kd{0.0};
+
+        float mix_ki{0.01};
 
         double altitude_offset{0};
 
@@ -173,32 +202,51 @@ void SPEED_SP::update_airspeed_pos_p(SPEED_SP::_s_error error, SPEED_SP::_s_stat
 
         SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp2 * error.distance_level;
     }
+    cov_gdsp_2_airsp(follower_status);
+}
 
+void SPEED_SP::cov_gdsp_2_airsp(SPEED_SP::_s_status follower_status)
+{
     airspeed_sp = sqrt((SPEED_SP_status.ned_vel_x - follower_status.wind_x) * (SPEED_SP_status.ned_vel_x - follower_status.wind_x) //
                        + (SPEED_SP_status.ned_vel_y - follower_status.wind_y) * (SPEED_SP_status.ned_vel_y - follower_status.wind_y));
 }
 
-void SPEED_SP::update_airspeed_mix_vp(SPEED_SP::_s_error error, SPEED_SP::_s_status follower_status, SPEED_SP::_s_status leader_status)
+void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEED_SP::_s_status follower_status, SPEED_SP::_s_status leader_status)
 {
 
-    //这个地方不好描述，请自行体会,是将v_sp和真实测量的差做了d后再加到v_sp作为输入量
-    // float last_ned_vel_x_error{0},
-    //     last_ned_vel_y_error{0},
-    //     current_ned_vel_x_error{0},
-    //     current_ned_vel_y_error{0};
+    //计算与从机的速度误差；
+    current_time = time;
+    _dt = current_time - last_time;
 
-    // current_ned_vel_x_error = error.ned_vel_x;
-    // current_ned_vel_y_error = error.ned_vel_y;
+    if (first_use)
+    {
+        _dt = 0.02;
+        first_use = false;
+    }
 
-    // float d_ned_vel_x_error = (current_ned_vel_x_error - last_ned_vel_x_error) / (current_time - last_time_v_sp);
-    // float d_ned_vel_y_error = (current_ned_vel_y_error - last_ned_vel_y_error) / (current_time - last_time_v_sp);
+    calculated_vel_led_fol(follower_status, leader_status);
 
-    // SPEED_SP_status.ned_vel_x = formation_params.v_error_kd * d_ned_vel_x_error + SPEED_SP_status.ned_vel_x;
-    // SPEED_SP_status.ned_vel_y = formation_params.v_error_kd * d_ned_vel_y_error + SPEED_SP_status.ned_vel_y;
+    float e_pv_n = formation_params.kp_p * error.n_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_x; //主从机速度误差
+    float e_pv_e = formation_params.kp_p * error.e_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_y;
 
-    // last_ned_vel_x_error = current_ned_vel_x_error;
-    // last_ned_vel_y_error = current_ned_vel_y_error;
-    // last_time_v_sp = current_time;
+    //pid控制器：抗击分包和pid，增量式pid等等
+    n_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
+    e_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
+
+    if (reset_cal_speed)
+    {
+        n_pid.reset_pid();
+        e_pid.reset_pid();
+
+        reset_cal_speed = false;
+    }
+
+    SPEED_SP_status.ned_vel_x = n_pid.pid_anti_saturated(current_time, e_pv_n);
+
+    SPEED_SP_status.ned_vel_y = e_pid.pid_anti_saturated(current_time, e_pv_n);
+
+    cov_gdsp_2_airsp(follower_status);
+
+    last_time = current_time;
 }
-
 #endif

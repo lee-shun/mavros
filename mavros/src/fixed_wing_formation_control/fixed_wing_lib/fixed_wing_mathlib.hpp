@@ -1,7 +1,7 @@
 #ifndef _FIXED_WING_MATHLIB_HPP_
 #define _FIXED_WING_MATHLIB_HPP_
 
-#include "pid_controller.h"
+#include "pid_controller.hpp"
 
 class _FIXED_WING_MATHLIB
 {
@@ -9,8 +9,6 @@ private:
 public:
     void quaternion_2_euler(float quat[4], float angle[3]); //四元数转欧拉角
     void euler_2_quaternion(float angle[3], float quat[4]);
-    float pid_controller(float kp, float ki, float kd, float sampleTimeSeconds,
-                         float minOutput, float maxOutput, float pidinput, float pidsetpoint);
 };
 
 void _FIXED_WING_MATHLIB::quaternion_2_euler(float quat[4], float angle[3])
@@ -47,19 +45,6 @@ void _FIXED_WING_MATHLIB::euler_2_quaternion(float angle[3], float quat[4])
     quat[2] = float(cosPhi_2 * sinTheta_2 * cosPsi_2 + sinPhi_2 * cosTheta_2 * sinPsi_2);
 
     quat[3] = float(cosPhi_2 * cosTheta_2 * sinPsi_2 - sinPhi_2 * sinTheta_2 * cosPsi_2);
-}
-
-float _FIXED_WING_MATHLIB::pid_controller(float kp, float ki, float kd, float sampleTimeSeconds,
-                                          float minOutput, float maxOutput, float pidinput, float pidsetpoint)
-{
-    PIDControl controller(kp, ki, kd, sampleTimeSeconds, minOutput, maxOutput, AUTOMATIC, DIRECT);
-
-    controller.PIDInputSet(pidinput);
-    controller.PIDSetpointSet(pidsetpoint);
-    controller.PIDSampleTimeSet(sampleTimeSeconds);
-    controller.PIDCompute();
-
-    return controller.PIDOutputGet();
 }
 
 #endif

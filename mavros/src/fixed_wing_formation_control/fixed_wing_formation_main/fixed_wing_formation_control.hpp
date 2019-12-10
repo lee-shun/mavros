@@ -353,6 +353,10 @@ private:
 
 	string control_mode_current;
 
+	string control_mode_prev_sp;
+
+	string control_mode_current_sp;
+
 public:
 	void write_to_files(string file_path_name, float time_stamp, float data);
 
