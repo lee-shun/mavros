@@ -69,6 +69,8 @@ private:
 
 	ros::Publisher fixed_wing_local_att_sp_pub;
 
+	ros::Publisher fixed_wing_leader_state_pub;
+
 	ros::Subscriber // 【订阅】无人机ned三向加速度
 		fixed_wing_battrey_state_from_px4_sub;
 
@@ -390,7 +392,7 @@ public:
 
 	void send_the_command_to_px4();
 
-	void send_message_to_sender();
+	void send_message_to_sender(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer);
 
 	void control_formation();
 

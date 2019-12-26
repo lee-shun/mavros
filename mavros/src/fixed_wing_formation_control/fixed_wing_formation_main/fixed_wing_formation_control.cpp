@@ -69,9 +69,16 @@ void _FIXED_WING_FORMATION_CONTROL::send_the_command_to_px4()
     //
 }
 
-void _FIXED_WING_FORMATION_CONTROL::send_message_to_sender()
+void _FIXED_WING_FORMATION_CONTROL::send_message_to_sender(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_pointer)
 {
-    //
+
+    //现在先用这个消息用着，以后得给仿真用的领机单独写一个。
+    fixed_wing_sub_pub_pointer->fixed_wing_states_tran.air_speed = follower_status.air_speed;
+    fixed_wing_sub_pub_pointer->fixed_wing_states_tran.latitude = follower_status.latitude;
+    fixed_wing_sub_pub_pointer->fixed_wing_states_tran.longtitude = follower_status.longtitude;
+    fixed_wing_sub_pub_pointer->fixed_wing_states_tran.altitude = follower_status.altitude;
+
+    fixed_wing_leader_state_pub.publish(fixed_wing_sub_pub_pointer->fixed_wing_states_tran);
 }
 
 void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_wing_sub_pub_poiter)
@@ -146,9 +153,9 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<mavros_msgs::VFR_HUD> //
           ("/mavros/vfr_hud", 10, &_FIXED_WING_SUB_PUB::air_ground_speed_from_px4_cb, fixed_wing_sub_pub_poiter);
 
-    fixed_wing_states_tran_sub                            //订阅空速、地速
-        = nh.subscribe<mavros_msgs::Formation_fixed_wing> //
-          ("/mavros/fixed_wing_formation/status", 10, &_FIXED_WING_SUB_PUB::fixed_wing_states_tran_cb, fixed_wing_sub_pub_poiter);
+    // fixed_wing_states_tran_sub                            //订阅空速、地速
+    //     = nh.subscribe<mavros_msgs::Formation_fixed_wing> //
+    //       ("/mavros/fixed_wing_formation/status", 10, &_FIXED_WING_SUB_PUB::fixed_wing_states_tran_cb, fixed_wing_sub_pub_poiter);
 
     //##########################################订阅消息###################################################//
 
@@ -159,6 +166,9 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
     fixed_wing_global_pos_sp_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("mavros/setpoint_raw/global", 10);
 
     fixed_wing_local_att_sp_pub = nh.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 10);
+
+    // 发布接收到的leader的位置速度信息
+    fixed_wing_leader_state_pub = nh.advertise<mavros_msgs::Formation_fixed_wing>("/mavros/fixed_wing_formation/status", 10);
 
     //##########################################发布消息###################################################//
 
@@ -560,15 +570,15 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
         _speed_sp.re_cal_speed();
     }
 
-    if (_error.distance_level > 20 || _error.distance_level < -10)//误差大的时候使用比例控制
+    if (_error.distance_level > 20 || _error.distance_level < -10) //误差大的时候使用比例控制
     {
-        cout<<"in the airspeed_pos_p"<<endl;
+        cout << "in the airspeed_pos_p" << endl;
         _speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
     }
 
     else
     {
-        cout<<"in the airspeed_mix_vp"<<endl;
+        cout << "in the airspeed_mix_vp" << endl;
         _speed_sp.update_airspeed_mix_vp(current_time, _error, fol_status, led_status);
     }
 
@@ -793,6 +803,9 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             cout << "|            lee            |" << endl;
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
+            //如果是offboard模式，就给从机发送消息
+
+            send_message_to_sender(&fixed_wing_sub_pub);
         }
 
         else
@@ -803,19 +816,22 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             cout << "|             |             |" << endl;
             cout << "V             V             V" << endl;
 
-            current_time = get_ros_time(begin_time);
+            //如果是offboard模式，就给从机发送消息
 
-            control_vertical(current_time); //控制高度，空速
+            send_message_to_sender(&fixed_wing_sub_pub);
+            // current_time = get_ros_time(begin_time);
 
-            current_time = get_ros_time(begin_time);
+            // control_vertical(current_time); //控制高度，空速
 
-            control_lateral(current_time); //控制水平位置（速度方向）
+            // current_time = get_ros_time(begin_time);
 
-            //show_tecs_status();
+            // control_lateral(current_time); //控制水平位置（速度方向）
 
-            send_setpoint_to_px4(&fixed_wing_sub_pub);
+            // //show_tecs_status();
 
-            send_setpoint_to_ground_station();
+            // send_setpoint_to_px4(&fixed_wing_sub_pub);
+
+            // send_setpoint_to_ground_station();
         }
 
         ros::spinOnce(); //挂起一段时间，保证周期的速度
