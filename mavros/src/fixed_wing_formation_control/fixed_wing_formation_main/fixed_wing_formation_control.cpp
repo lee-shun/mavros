@@ -818,7 +818,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             send_setpoint_to_ground_station();
         }
 
-        ros::spinOnce(); //挂起一段时间，保证周期的速度
+        ros::spinOnce(); //挂起一段时间，保证周期的速度hahahha
 
         rate.sleep();
     }
