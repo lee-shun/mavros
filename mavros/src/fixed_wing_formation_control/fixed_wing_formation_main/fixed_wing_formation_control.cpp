@@ -778,6 +778,8 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_leader_status(&fixed_wing_sub_pub);
 
+        show_fixed_wing_status(1);//一号机就是领机
+
         show_fixed_wing_status(2);
 
         foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望位置，期望空速的大小
