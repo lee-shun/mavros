@@ -146,7 +146,7 @@ void _FIXED_WING_FORMATION_CONTROL::ros_sub_and_pub(_FIXED_WING_SUB_PUB *fixed_w
         = nh.subscribe<mavros_msgs::VFR_HUD> //
           ("/mavros/vfr_hud", 10, &_FIXED_WING_SUB_PUB::air_ground_speed_from_px4_cb, fixed_wing_sub_pub_poiter);
 
-    fixed_wing_states_tran_sub                            //订阅空速、地速
+    fixed_wing_states_tran_sub                            //领机状态
         = nh.subscribe<mavros_msgs::Formation_fixed_wing> //
           ("/mavros/fixed_wing_formation/status", 10, &_FIXED_WING_SUB_PUB::fixed_wing_states_tran_cb, fixed_wing_sub_pub_poiter);
 
@@ -833,4 +833,6 @@ int main(int argc, char **argv)
     {
         formation_control.run(argc, argv);
     }
+
+    return 0;
 }
