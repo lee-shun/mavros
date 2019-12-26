@@ -553,23 +553,29 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
     led_status.ned_vel_y = leader_status.ned_vel_y;
 
     control_mode_current_sp = follower_status.mode;
-    
+
     //如果模式不一致，重置一下空速计算器
     if (control_mode_current_sp != control_mode_prev_sp)
     {
         _speed_sp.re_cal_speed();
     }
 
-    //_speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
+    if (_error.distance_level > 20 || _error.distance_level < -10)//误差大的时候使用比例控制
+    {
+        cout<<"in the airspeed_pos_p"<<endl;
+        _speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
+    }
 
-    _speed_sp.update_airspeed_mix_vp(current_time,_error, fol_status, led_status);
+    else
+    {
+        cout<<"in the airspeed_mix_vp"<<endl;
+        _speed_sp.update_airspeed_mix_vp(current_time, _error, fol_status, led_status);
+    }
 
     follower_setpoint.air_speed = _speed_sp.get_airspeed_sp(); //得到了期望的空速
 
     speed_status = _speed_sp.get_sp_status();
 
-    
-    
     //空速计算器状态赋值
     follower_setpoint.ned_vel_x = speed_status.ned_vel_x;
 
@@ -772,7 +778,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_leader_status(&fixed_wing_sub_pub);
 
-        //show_fixed_wing_status(2);
+        show_fixed_wing_status(2);
 
         foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望位置，期望空速的大小
 
