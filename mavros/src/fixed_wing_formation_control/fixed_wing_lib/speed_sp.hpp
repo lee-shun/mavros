@@ -107,6 +107,8 @@ private:
 
     struct _s_formation_params
     {
+        float v_kp{0.8};
+
         float v_kp1{0.1}; //近距离
 
         float v_kp2{0.5}; //远距离
@@ -127,6 +129,8 @@ private:
 
         double latitude_offset{0};
 
+        double per_distance{100};
+
     } formation_params;
 
     float airspeed_sp{0};
@@ -144,64 +148,14 @@ void SPEED_SP::update_airspeed_pos_p(SPEED_SP::_s_error error, SPEED_SP::_s_stat
 
     calculated_vel_led_fol(follower_status, leader_status);
 
-    if (-3 < error.distance_level && error.distance_level < 3)
-    //近距离
-    {
-        cout << "in the 0.01lei" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + 0.01 * error.n_distance;
+    float abs_error = abs_num(error.distance_level);
 
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + 0.01 * error.e_distance;
-    }
-    else if (-5 < error.distance_level && error.distance_level < 5)
-    //近距离
-    {
-        cout << "in the 0.03" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + 0.03 * error.n_distance;
+    float per_k = formation_params.v_kp / formation_params.per_distance;
 
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + 0.03 * error.e_distance;
-    }
-    else if (-10 < error.distance_level && error.distance_level < 10)
-    //近距离
-    {
-        cout << "in the 0.05" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + 0.05 * error.n_distance;
+    SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + (per_k * abs_error) * error.n_distance;
 
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + 0.05 * error.e_distance;
-    }
-    else if (-15 < error.distance_level && error.distance_level < 15)
-    //近距离
-    {
-        cout << "in the 0.08" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + 0.08 * error.n_distance;
+    SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + (per_k * abs_error) * error.e_distance;
 
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + 0.08 * error.e_distance;
-    }
-
-    else if (-20 < error.distance_level && error.distance_level < 20)
-    //近距离
-    {
-        cout << "in the 0.1" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp1 * error.n_distance;
-
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp1 * error.e_distance;
-    }
-
-    else if (-25 < error.distance_level && error.distance_level < 25)
-    //近距离
-    {
-        cout << "in the 0.2" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + 0.2 * error.n_distance;
-
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + 0.2 * error.e_distance;
-    }
-
-    else
-    {
-        cout << "in the long_distance" << endl;
-        SPEED_SP_status.ned_vel_x = leader_status.ned_vel_x + formation_params.v_kp2 * error.distance_level;
-
-        SPEED_SP_status.ned_vel_y = leader_status.ned_vel_y + formation_params.v_kp2 * error.distance_level;
-    }
     cov_gdsp_2_airsp(follower_status);
 }
 
@@ -226,11 +180,11 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
 
     calculated_vel_led_fol(follower_status, leader_status);
 
-    float e_pv_n = formation_params.kp_p * error.n_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_x; 
+    float e_pv_n = formation_params.kp_p * error.n_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_x;
     float e_pv_e = formation_params.kp_p * error.e_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_y;
-    
-    cout<<"error.n_distance==="<<error.n_distance<<endl;
-    cout<<"error.e_distance==="<<error.e_distance<<endl;
+
+    cout << "error.n_distance===" << error.n_distance << endl;
+    cout << "error.e_distance===" << error.e_distance << endl;
     //pid控制器：抗击分包和pid，增量式pid等等
     n_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
     e_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
@@ -247,7 +201,6 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
 
     SPEED_SP_status.ned_vel_y = e_pid.pid_anti_saturated(current_time, e_pv_e);
 
-    
     cov_gdsp_2_airsp(follower_status);
 
     last_time = current_time;

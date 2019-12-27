@@ -560,17 +560,8 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
         _speed_sp.re_cal_speed();
     }
 
-    if (_error.distance_level > 20 || _error.distance_level < -10)//误差大的时候使用比例控制
-    {
-        cout<<"in the airspeed_pos_p"<<endl;
-        _speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
-    }
-
-    else
-    {
-        cout<<"in the airspeed_mix_vp"<<endl;
-        _speed_sp.update_airspeed_mix_vp(current_time, _error, fol_status, led_status);
-    }
+    cout << "use airspeed_pos_p" << endl;
+    _speed_sp.update_airspeed_pos_p(_error, fol_status, led_status);
 
     follower_setpoint.air_speed = _speed_sp.get_airspeed_sp(); //得到了期望的空速
 
@@ -778,7 +769,7 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
 
         update_leader_status(&fixed_wing_sub_pub);
 
-        show_fixed_wing_status(1);//一号机就是领机
+        show_fixed_wing_status(1); //一号机就是领机
 
         show_fixed_wing_status(2);
 

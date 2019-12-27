@@ -145,4 +145,16 @@ void cov_lat_long_2_m(double a_pos[2], double b_pos[2], double m[2])
     m[1] = e_distance;
 }
 
+float abs_num(float a)
+{
+    float result;
+    if (a > 0)
+        result = -a;
+
+    else
+        result = a;
+
+    return result;
+}
+
 #endif
