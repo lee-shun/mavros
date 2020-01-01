@@ -514,18 +514,31 @@ bool _FIXED_WING_FORMATION_CONTROL::update_follwer_status(_FIXED_WING_SUB_PUB *f
 
 void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 {
-    cout << "当前队形--->" << formation_type << endl;
+    cout << "当前队形-->" << formation_type << endl;
+    double ref_led[3], result[3];
+    ref_led[0] = leader_status.latitude;
+    ref_led[1] = leader_status.longtitude;
+    ref_led[2] = leader_status.altitude;
 
     switch (formation_type)
     {
-    case 1: //一对一，前后为10m，左右为0.1m
-
+    case 2: //一对一，前后为10m，左右为0.1m
+        float x = 10;
+        float y = 0.1;
+        float z = 0;
+        cov_m_2_lat_long_alt(ref_led, x, y, z, result);
         break;
 
-    case 2:
-
+    case 1:
+        result[0] = 0;
+        result[1] = 0;
+        result[2] = 0;
         break;
     };
+
+    formation_params.latitude_offset = result[0];
+    formation_params.longtitude_offset = result[1];
+    formation_params.altitude_offset = result[2];
 
     //期望位置的产生
     follower_setpoint.altitude = leader_status.altitude + formation_params.altitude_offset;
@@ -772,9 +785,9 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
         show_fixed_wing_status(1); //一号机就是领机
 
         show_fixed_wing_status(2);
-        
-        current_time = get_ros_time(begin_time);//计算编队期望之前，需要更新一下时间
-        
+
+        current_time = get_ros_time(begin_time); //计算编队期望之前，需要更新一下时间
+
         foramtion_demands_update(1); //根据队形的需要，计算出编队从机的期望位置，期望空速的大小
 
         show_formation_error(2); //上一步计算的误差打印一下
