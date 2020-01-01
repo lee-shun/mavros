@@ -33,9 +33,9 @@ private:
 
     float diffe{0};
 
-    float integ_max{1000};
+    float integ_max{500};
 
-    float integ_min{-1000};
+    float integ_min{-500};
 
     //基本参数
 
@@ -54,7 +54,6 @@ private:
 
     float ele_d{0};
 
-
 public:
     //功能函数
 
@@ -65,7 +64,7 @@ public:
     float pid_classic();
 
     //抗饱和积分 pid
-    float pid_anti_saturated(float time, float input_val);
+    float pid_anti_saturated(float time, float input_val, bool use_integ);
 
     //增量式 pid
     float pid_incremental();
@@ -99,7 +98,6 @@ public:
     }
 };
 
-
 void PID_CONTROLLER::cal_time_interval()
 {
     _dt = current_time - last_time;
@@ -107,7 +105,7 @@ void PID_CONTROLLER::cal_time_interval()
     _dt = constrain(_dt, _dt_min, _dt_max);
 }
 
-float PID_CONTROLLER::pid_anti_saturated(float time, float input_val)
+float PID_CONTROLLER::pid_anti_saturated(float time, float input_val, bool use_integ)
 {
     current_time = time;
     input = input_val;
@@ -149,6 +147,10 @@ float PID_CONTROLLER::pid_anti_saturated(float time, float input_val)
 
     ele_i = ki * integ;
 
+    if (!use_integ) //使用积分开关，距离比较小的时候使用
+    {
+        ele_i = 0;
+    }
     output = ele_p + ele_i + ele_d;
 
     //为下一次做好准备

@@ -183,11 +183,9 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
     float e_pv_n = formation_params.kp_p * error.n_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_x;
     float e_pv_e = formation_params.kp_p * error.e_distance + formation_params.kv_p * SPEED_SP_status.vel_led_fol_y;
 
-    cout << "error.n_distance===" << error.n_distance << endl;
-    cout << "error.e_distance===" << error.e_distance << endl;
     //pid控制器：抗击分包和pid，增量式pid等等
     n_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
-    
+
     e_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
 
     if (reset_cal_speed)
@@ -198,9 +196,17 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
         reset_cal_speed = false;
     }
 
-    SPEED_SP_status.ned_vel_x = n_pid.pid_anti_saturated(current_time, e_pv_n);
+    bool use_integ = false;
 
-    SPEED_SP_status.ned_vel_y = e_pid.pid_anti_saturated(current_time, e_pv_e);
+    if (error.distance_level < 50) //小于50m开始使用积分器，防止积分饱和。
+    {
+        use_integ = true;
+        cout << "use_the_integ" << endl;
+    }
+
+    SPEED_SP_status.ned_vel_x = n_pid.pid_anti_saturated(current_time, e_pv_n, use_integ);
+
+    SPEED_SP_status.ned_vel_y = e_pid.pid_anti_saturated(current_time, e_pv_e, use_integ);
 
     cov_gdsp_2_airsp(follower_status);
 

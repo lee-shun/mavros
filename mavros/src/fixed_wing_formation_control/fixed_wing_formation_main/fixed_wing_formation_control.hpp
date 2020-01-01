@@ -288,7 +288,7 @@ private:
 		float roll_max{PI / 2};
 	} params;
 
-	struct _s_error_followern//这里定义的误差和主机无关，只是自己的期望和实际差
+	struct _s_error_followern //这里定义的误差和主机无关，只是自己的期望和实际差
 	{
 		double latitude{0};
 
@@ -318,7 +318,7 @@ private:
 
 		float ned_vel_y{0};
 
-		float vel_led_fol_x{0};//ned下，领机和从机速度之差，由speed——sp类产生
+		float vel_led_fol_x{0}; //ned下，领机和从机速度之差，由speed——sp类产生
 
 		float vel_led_fol_y{0};
 
@@ -336,9 +336,15 @@ private:
 
 		double altitude_offset{0};
 
-		double longtitude_offset{0};
+		double longtitude_offset{0};//用经纬高表示的编队的几何形状
 
 		double latitude_offset{0};
+
+		double altitude_offset_m{0};//用米表示的编队的几何形状
+
+		double longtitude_offset_m{0};
+
+		double latitude_offset_m{0};
 
 	} formation_params;
 
