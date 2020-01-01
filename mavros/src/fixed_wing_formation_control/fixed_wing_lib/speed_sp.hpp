@@ -117,7 +117,7 @@ private:
 
         float kp_p{0.8}; //从机期望与实际位置误差比例
 
-        float mix_kp{0.3};
+        float mix_kp{0.6};
 
         float mix_kd{0.0};
 
@@ -187,6 +187,7 @@ void SPEED_SP::update_airspeed_mix_vp(float time, SPEED_SP::_s_error error, SPEE
     cout << "error.e_distance===" << error.e_distance << endl;
     //pid控制器：抗击分包和pid，增量式pid等等
     n_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
+    
     e_pid.init_pid(formation_params.mix_kp, formation_params.mix_ki, formation_params.mix_kd);
 
     if (reset_cal_speed)

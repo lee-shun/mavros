@@ -33,9 +33,9 @@ private:
 
     float diffe{0};
 
-    float integ_max{200};
+    float integ_max{1000};
 
-    float integ_min{-200};
+    float integ_min{-1000};
 
     //基本参数
 
