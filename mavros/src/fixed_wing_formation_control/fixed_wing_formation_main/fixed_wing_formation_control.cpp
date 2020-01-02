@@ -522,17 +522,16 @@ void _FIXED_WING_FORMATION_CONTROL::foramtion_demands_update(int formation_type)
 
     switch (formation_type)
     {
+    case 1:
+        result[0] = 0;
+        result[1] = 0;
+        result[2] = 0;
+        break;
     case 2: //一对一，前后为10m，左右为0.1m
         float x = 10;
         float y = 0.1;
         float z = 0;
         cov_m_2_lat_long_alt(ref_led, x, y, z, result);
-        break;
-
-    case 1:
-        result[0] = 0;
-        result[1] = 0;
-        result[2] = 0;
         break;
     };
 
