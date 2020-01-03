@@ -819,11 +819,10 @@ void _FIXED_WING_FORMATION_CONTROL::run(int argc, char **argv)
             control_lateral(current_time); //控制水平位置（速度方向）
 
             //show_tecs_status();
-
-            send_setpoint_to_px4(&fixed_wing_sub_pub);
-
-            send_setpoint_to_ground_station();
         }
+        send_setpoint_to_px4(&fixed_wing_sub_pub);//将这个拿出来，如果没有这个的话遥控器进入不了offboard
+
+        send_setpoint_to_ground_station();
 
         ros::spinOnce(); //挂起一段时间，保证周期的速度hahahha
 
